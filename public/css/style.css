@@ -1895,7 +1895,7 @@ body {
 
 .pk-shell {
   position: relative;
-  width: min(680px, 96vw);
+  width: min(960px, 96vw);
   max-height: 96vh;
   background: #1a2e1a;
   border-radius: 20px;
@@ -1907,13 +1907,13 @@ body {
 
 .pk-header {
   display: flex; align-items: flex-start; justify-content: space-between;
-  padding: 18px 22px 10px;
+  padding: 14px 22px 8px;
   border-bottom: 1px solid rgba(100, 180, 100, 0.15);
   flex-shrink: 0;
 }
 .pk-kicker { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(232, 221, 208, 0.35); }
-.pk-title { font-size: 22px; font-weight: 800; color: #8db87a; margin-top: 2px; }
-.pk-flavor { font-size: 12px; color: rgba(232, 221, 208, 0.4); font-style: italic; margin-top: 4px; }
+.pk-title { font-size: 20px; font-weight: 800; color: #8db87a; margin-top: 2px; }
+.pk-flavor { font-size: 11px; color: rgba(232, 221, 208, 0.4); font-style: italic; margin-top: 2px; }
 .pk-close {
   background: none; border: none; color: rgba(232, 221, 208, 0.5); font-size: 20px; cursor: pointer;
   width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
@@ -1922,11 +1922,16 @@ body {
 .pk-close:hover { background: rgba(255, 255, 255, 0.08); color: #e8ddd0; }
 
 .pk-body {
-  padding: 16px 22px 18px;
+  padding: 10px 22px 12px;
   overflow-y: auto;
   flex: 1;
-  display: flex; flex-direction: column; gap: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
 }
+.pk-body::-webkit-scrollbar { width: 4px; }
+.pk-body::-webkit-scrollbar-track { background: transparent; }
+.pk-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 
 /* Phase bar */
 .pk-phase-bar {
@@ -1954,21 +1959,20 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Opponents */
+/* Opponents — horizontal strips */
 .pk-opponents {
-  display: flex; gap: 10px; justify-content: center;
+  display: flex; gap: 8px; justify-content: center;
   flex-wrap: wrap;
   flex-shrink: 0;
 }
 .pk-opponent {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 10px;
-  min-width: 140px;
+  border-radius: 10px;
+  padding: 6px 12px;
   flex: 1;
-  max-width: 200px;
-  text-align: center;
+  max-width: 280px;
+  display: flex; align-items: center; gap: 10px;
   transition: all 0.3s;
   position: relative;
 }
@@ -1979,16 +1983,17 @@ body {
 .pk-opponent.folded {
   opacity: 0.35;
 }
-.pk-opp-info { margin-bottom: 6px; }
+.pk-opp-info { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
 .pk-opp-avatar {
   width: 28px; height: 28px; border-radius: 50%; overflow: hidden;
-  margin: 0 auto 4px;
+  flex-shrink: 0;
 }
-.pk-opp-avatar svg { width: 100%; height: 100%; display: block; }
-.pk-opp-name { font-size: 13px; font-weight: 700; color: #e8ddd0; }
+.pk-opp-avatar svg, .pk-opp-avatar img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.pk-opp-text { min-width: 0; }
+.pk-opp-name { font-size: 12px; font-weight: 700; color: #e8ddd0; }
 .pk-opp-chips { font-size: 11px; color: #8db87a; font-weight: 600; }
-.pk-opp-style { font-size: 10px; color: rgba(232, 221, 208, 0.3); font-style: italic; }
-.pk-opp-cards { display: flex; gap: 4px; justify-content: center; margin-top: 6px; }
+.pk-opp-style { font-size: 9px; color: rgba(232, 221, 208, 0.3); font-style: italic; }
+.pk-opp-cards { display: flex; gap: 3px; flex-shrink: 0; }
 .pk-opp-fold {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   font-size: 12px; font-weight: 800; color: #d4836a; letter-spacing: 2px;
@@ -2011,8 +2016,15 @@ body {
 }
 .pk-community {
   display: flex; gap: 6px; justify-content: center;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
+.pk-community .playing-card {
+  width: 60px !important; height: 84px !important;
+}
+.pk-community .card-corner { font-size: 12px !important; left: 7px !important; top: 6px !important; }
+.pk-community .card-corner.bottom { right: 7px !important; bottom: 6px !important; left: auto !important; }
+.pk-community .card-center { font-size: 22px !important; }
+.pk-community .playing-card.hidden::after { font-size: 8px !important; letter-spacing: 1px !important; }
 .pk-pot {
   font-size: 16px; font-weight: 800; color: #C15F3C;
 }
@@ -2020,14 +2032,20 @@ body {
 /* Player area */
 .pk-player-area {
   text-align: center;
-  padding: 10px;
+  padding: 8px;
   background: rgba(193, 95, 60, 0.08);
   border: 1px solid rgba(193, 95, 60, 0.2);
   border-radius: 12px;
   flex-shrink: 0;
 }
-.pk-player-label { font-size: 13px; font-weight: 700; color: #e8ddd0; margin-bottom: 6px; }
-.pk-player-cards { display: flex; gap: 6px; justify-content: center; margin-bottom: 6px; }
+.pk-player-label { font-size: 12px; font-weight: 700; color: #e8ddd0; margin-bottom: 4px; }
+.pk-player-cards { display: flex; gap: 6px; justify-content: center; margin-bottom: 4px; }
+.pk-player-cards .playing-card {
+  width: 64px !important; height: 90px !important;
+}
+.pk-player-cards .card-corner { font-size: 13px !important; left: 7px !important; top: 6px !important; }
+.pk-player-cards .card-corner.bottom { right: 7px !important; bottom: 6px !important; left: auto !important; }
+.pk-player-cards .card-center { font-size: 24px !important; }
 .pk-player-chips { font-size: 14px; font-weight: 700; color: #8db87a; }
 .pk-hand-info {
   font-size: 12px; font-weight: 700; color: #C15F3C;
@@ -2054,6 +2072,7 @@ body {
 .pk-card-sm .card-corner { font-size: 9px !important; }
 .pk-card-sm .card-center { font-size: 16px !important; }
 .pk-card-sm .card-corner.bottom { font-size: 9px !important; }
+.pk-card-sm.hidden::after { font-size: 7px !important; letter-spacing: 1px !important; }
 
 .pk-empty-slot {
   width: 60px; min-width: 60px; height: 84px;

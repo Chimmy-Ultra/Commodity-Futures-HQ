@@ -552,9 +552,10 @@ var Poker = (function () {
         '<div class="' + classes + '">'
         + '<div class="pk-opp-info">'
         + (avatar ? '<div class="pk-opp-avatar">' + avatar + '</div>' : '')
+        + '<div class="pk-opp-text">'
         + '<div class="pk-opp-name">' + p.name + (isDealer ? ' <span class="pk-dealer-btn">D</span>' : '') + '</div>'
-        + '<div class="pk-opp-chips">$' + p.chips + '</div>'
-        + (p.profile ? '<div class="pk-opp-style">' + p.profile.desc + '</div>' : '')
+        + '<div class="pk-opp-chips">$' + p.chips + (p.profile ? ' <span class="pk-opp-style">' + p.profile.desc + '</span>' : '') + '</div>'
+        + '</div>'
         + '</div>'
         + '<div class="pk-opp-cards">' + cardsHtml + '</div>'
         + (p.folded ? '<div class="pk-opp-fold">FOLD</div>' : '')

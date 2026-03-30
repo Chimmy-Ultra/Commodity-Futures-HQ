@@ -141,28 +141,12 @@
     else closeSidebar();
   }
 
-  // --- Casino popup (replaces FAB) ---
-  function initCasinoPopup() {
-    var card = document.getElementById('home-casino');
-    var popup = document.getElementById('casino-popup');
-    var backdrop = document.getElementById('casino-popup-backdrop');
-    if (!card || !popup) return;
-
-    card.addEventListener('click', function () {
-      popup.classList.add('open');
-    });
-    if (backdrop) backdrop.addEventListener('click', function () {
-      popup.classList.remove('open');
-    });
-    popup.querySelectorAll('button[data-game]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        popup.classList.remove('open');
-        var game = btn.dataset.game;
-        if (game === 'blackjack') Blackjack.open();
-        else if (game === 'roulette') Roulette.open();
-        else if (game === 'slots') Slots.open();
-        else if (game === 'poker') Poker.open();
-      });
+  // --- Casino direct cards ---
+  function initCasinoCards() {
+    var map = { 'home-blackjack': Blackjack, 'home-roulette': Roulette, 'home-slots': Slots, 'home-poker': Poker };
+    Object.keys(map).forEach(function (id) {
+      var card = document.getElementById(id);
+      if (card) card.addEventListener('click', function () { map[id].open(); });
     });
   }
 
@@ -205,8 +189,8 @@
     var homeDatabento = document.getElementById('home-databento');
     if (homeDatabento) homeDatabento.addEventListener('click', function () { DatabentoManager.show(); });
 
-    // Casino popup
-    initCasinoPopup();
+    // Casino direct cards
+    initCasinoCards();
 
     // Keyboard shortcuts
     document.addEventListener('keydown', function (e) {
@@ -215,8 +199,6 @@
         Roulette.close();
         Slots.close();
         Poker.close();
-        var cp = document.getElementById('casino-popup');
-        if (cp) cp.classList.remove('open');
       }
     });
 
