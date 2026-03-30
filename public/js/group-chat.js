@@ -126,10 +126,11 @@ var GroupChatManager = (function () {
         throw new Error(errData.error || 'Request failed');
       }
 
-      // SSE stream
+      // SSE stream — currentEvent persists across read() chunks
       var reader = res.body.getReader();
       var decoder = new TextDecoder();
       var buffer = '';
+      var currentEvent = null;
 
       while (true) {
         var result = await reader.read();
@@ -137,14 +138,13 @@ var GroupChatManager = (function () {
 
         buffer += decoder.decode(result.value, { stream: true });
         var lines = buffer.split('\n');
-        buffer = lines.pop(); // keep incomplete line
+        buffer = lines.pop() || ''; // keep incomplete line
 
-        var currentEvent = null;
         for (var i = 0; i < lines.length; i++) {
-          var line = lines[i].trim();
-          if (line.startsWith('event: ')) {
-            currentEvent = line.substring(7);
-          } else if (line.startsWith('data: ') && currentEvent) {
+          var line = lines[i];
+          if (line.indexOf('event: ') === 0) {
+            currentEvent = line.substring(7).trim();
+          } else if (line.indexOf('data: ') === 0 && currentEvent) {
             try {
               var data = JSON.parse(line.substring(6));
               handleSSE(currentEvent, data);
