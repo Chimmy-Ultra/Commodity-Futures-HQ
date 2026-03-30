@@ -105,6 +105,12 @@
     if (kp) kp.classList.remove('visible');
     var dp = document.getElementById('databento-panel');
     if (dp) dp.classList.remove('visible');
+    var cp = document.getElementById('corr-panel');
+    if (cp) cp.classList.remove('visible');
+    var calp = document.getElementById('calendar-panel');
+    if (calp) calp.classList.remove('visible');
+    var gcp = document.getElementById('groupchat-panel');
+    if (gcp) gcp.classList.remove('visible');
     document.getElementById('welcome').style.display = '';
     buildHomeRecentReports();
     document.getElementById('topbar-title').textContent = 'Commodity HQ';
@@ -121,6 +127,12 @@
     if (kp) kp.classList.remove('visible');
     var dp = document.getElementById('databento-panel');
     if (dp) dp.classList.remove('visible');
+    var cp2 = document.getElementById('corr-panel');
+    if (cp2) cp2.classList.remove('visible');
+    var calp2 = document.getElementById('calendar-panel');
+    if (calp2) calp2.classList.remove('visible');
+    var gcp2 = document.getElementById('groupchat-panel');
+    if (gcp2) gcp2.classList.remove('visible');
     document.getElementById('topbar-title').textContent = c.name;
     document.getElementById('topbar-role').textContent = c.role;
     if (isMobile()) closeSidebar();
@@ -188,6 +200,12 @@
     if (homeReports) homeReports.addEventListener('click', function () { AnalysisManager.showReportPanel(); });
     var homeDatabento = document.getElementById('home-databento');
     if (homeDatabento) homeDatabento.addEventListener('click', function () { DatabentoManager.show(); });
+    var homeCorr = document.getElementById('home-correlation');
+    if (homeCorr) homeCorr.addEventListener('click', function () { CorrelationManager.show(); });
+    var homeCal = document.getElementById('home-calendar');
+    if (homeCal) homeCal.addEventListener('click', function () { CalendarManager.show(); });
+    var homeGC = document.getElementById('home-groupchat');
+    if (homeGC) homeGC.addEventListener('click', function () { GroupChatManager.show(); });
 
     // Casino direct cards
     initCasinoCards();

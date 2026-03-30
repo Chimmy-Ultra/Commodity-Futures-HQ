@@ -98,6 +98,21 @@
             <div class="home-tool-title">Databento Query</div>
             <div class="home-tool-desc">Historical OHLCV data lookup</div>
           </div>
+          <div class="home-tool-card" id="home-correlation">
+            <div class="home-tool-icon">&#x1F7E5;</div>
+            <div class="home-tool-title">Correlation Matrix</div>
+            <div class="home-tool-desc">Commodity correlation heatmap</div>
+          </div>
+          <div class="home-tool-card" id="home-calendar">
+            <div class="home-tool-icon">&#x1F4C5;</div>
+            <div class="home-tool-title">Economic Calendar</div>
+            <div class="home-tool-desc">Upcoming events &amp; reports</div>
+          </div>
+          <div class="home-tool-card" id="home-groupchat">
+            <div class="home-tool-icon">&#x1F5E3;&#xFE0F;</div>
+            <div class="home-tool-title">Group Discussion</div>
+            <div class="home-tool-desc">Multi-agent roundtable</div>
+          </div>
           <div class="home-tool-card" id="home-blackjack">
             <div class="home-tool-icon">&#x1F0CF;</div>
             <div class="home-tool-title">Blackjack</div>
@@ -212,6 +227,73 @@
       <div class="databento-export">
         <button class="btn-analyze secondary" id="db-export-btn">Export CSV</button>
       </div>
+    </div>
+
+    <!-- Correlation Matrix Panel -->
+    <div class="corr-panel" id="corr-panel">
+      <div class="corr-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-weight:700;font-size:16px;color:var(--text)">Correlation Matrix</div>
+          <div class="corr-range-btns">
+            <button class="corr-range-btn" data-range="3mo">3M</button>
+            <button class="corr-range-btn active" data-range="6mo">6M</button>
+            <button class="corr-range-btn" data-range="1y">1Y</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div id="corr-status" style="font-size:12px;color:var(--text-muted)"></div>
+          <button class="btn-icon" id="corr-close" title="Close">&#x2715;</button>
+        </div>
+      </div>
+      <div class="corr-body">
+        <div id="corr-loader" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);font-size:14px;color:var(--text-muted)">Loading correlation data...</div>
+        <div id="corr-matrix"></div>
+      </div>
+      <div class="corr-legend">
+        <span class="corr-legend-label">-1.0</span>
+        <div class="corr-legend-bar"></div>
+        <span class="corr-legend-label">+1.0</span>
+      </div>
+    </div>
+
+    <!-- Economic Calendar Panel -->
+    <div class="calendar-panel" id="calendar-panel">
+      <div class="cal-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-weight:700;font-size:16px;color:var(--text)">&#x1F4C5; Economic Calendar</div>
+          <div class="cal-filter-btns">
+            <button class="cal-filter-btn active" data-filter="all">All</button>
+            <button class="cal-filter-btn" data-filter="agriculture">Agriculture</button>
+            <button class="cal-filter-btn" data-filter="macro">Macro</button>
+            <button class="cal-filter-btn" data-filter="energy">Energy</button>
+            <button class="cal-filter-btn" data-filter="positioning">Positioning</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn-analyze secondary" id="cal-refresh" style="padding:6px 12px;font-size:12px">Refresh</button>
+          <button class="btn-icon" id="cal-close" title="Close">&#x2715;</button>
+        </div>
+      </div>
+      <div class="cal-body">
+        <div id="cal-loader" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);font-size:14px;color:var(--text-muted)">Loading calendar...</div>
+        <div id="cal-list"></div>
+      </div>
+    </div>
+
+    <!-- Group Discussion Panel -->
+    <div class="groupchat-panel" id="groupchat-panel">
+      <div class="gc-header">
+        <div style="font-weight:700;font-size:16px;color:var(--text)">&#x1F5E3;&#xFE0F; Group Discussion</div>
+        <button class="btn-icon" id="gc-close" title="Close">&#x2715;</button>
+      </div>
+      <div class="gc-setup">
+        <div class="gc-char-grid" id="gc-char-grid"></div>
+        <div class="gc-topic-row">
+          <input type="text" id="gc-topic" placeholder="Discussion topic, e.g. &#x73FE;&#x5728;&#x7389;&#x7C73;&#x53EF;&#x4EE5;&#x505A;&#x591A;&#x55CE;&#xFF1F;" class="gc-topic-input">
+          <button class="btn-analyze" id="gc-start" disabled>&#x1F5E3;&#xFE0F; Start Discussion (0/5)</button>
+        </div>
+      </div>
+      <div class="gc-messages" id="gc-messages"></div>
     </div>
 
     <!-- Quote Panel -->
@@ -438,6 +520,9 @@
 <script src="js/kline.js"></script>
 <script src="js/databento.js"></script>
 <script src="js/analysis.js"></script>
+<script src="js/correlation.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/group-chat.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

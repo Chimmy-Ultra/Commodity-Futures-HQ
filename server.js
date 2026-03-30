@@ -9,6 +9,8 @@ const { COMMODITY_LABELS } = require('./config/commodities');
 const { runAnalysis } = require('./lib/orchestrator');
 const { callClaude, formatChatHistory } = require('./lib/claude-runner');
 const { AGENT_MODELS } = require('./config/models');
+const { getCorrelationMatrix } = require('./lib/correlation');
+const { CALENDAR_EVENTS, CALENDAR_PROMPT } = require('./config/calendar');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -199,6 +201,160 @@ app.post('/api/databento/query', async (req, res) => {
     var isConfig = error.message && error.message.includes('not configured');
     res.status(isConfig ? 503 : 502).json({ error: isConfig ? 'Databento API key not configured.' : 'Failed to query Databento. Please try again.' });
   }
+});
+
+// --- Correlation Matrix ---
+
+app.get('/api/correlation', async (req, res) => {
+  try {
+    var range = req.query.range || '6mo';
+    if (!['3mo', '6mo', '1y'].includes(range)) range = '6mo';
+    var data = await getCorrelationMatrix(range);
+    res.json(data);
+  } catch (error) {
+    console.error('Correlation Error:', error.message);
+    res.status(502).json({ error: 'Failed to compute correlation matrix. Please try again.' });
+  }
+});
+
+// --- Economic Calendar ---
+
+var calendarCache = { data: null, fetchedAt: 0 };
+var CALENDAR_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+app.get('/api/calendar', async (req, res) => {
+  var forceRefresh = req.query.refresh === '1';
+
+  if (!forceRefresh && calendarCache.data && Date.now() - calendarCache.fetchedAt < CALENDAR_CACHE_TTL) {
+    return res.json(calendarCache.data);
+  }
+
+  try {
+    var today = new Date().toISOString().split('T')[0];
+    var prompt = CALENDAR_PROMPT + '\n\nToday is: ' + today;
+
+    var raw = await callClaude({
+      systemPrompt: 'You are a financial calendar data provider. Return only valid JSON.',
+      userMessage: prompt,
+      webSearch: true,
+    });
+
+    // Parse the JSON from Claude's response
+    var jsonMatch = raw.match(/\[[\s\S]*\]/);
+    var dates = [];
+    if (jsonMatch) {
+      try { dates = JSON.parse(jsonMatch[0]); } catch (e) { dates = []; }
+    }
+
+    // Merge with event definitions
+    var eventMap = {};
+    CALENDAR_EVENTS.forEach(function (e) { eventMap[e.id] = e; });
+
+    var events = [];
+    dates.forEach(function (d) {
+      var def = eventMap[d.id];
+      if (def && d.date) {
+        events.push({
+          id: def.id,
+          name: def.name,
+          nameZh: def.nameZh,
+          category: def.category,
+          impact: def.impact,
+          icon: def.icon,
+          description: def.description,
+          date: d.date,
+        });
+      }
+    });
+
+    // Sort by date
+    events.sort(function (a, b) { return a.date.localeCompare(b.date); });
+
+    var result = { events: events, updatedAt: new Date().toISOString() };
+    calendarCache = { data: result, fetchedAt: Date.now() };
+    res.json(result);
+  } catch (error) {
+    console.error('Calendar Error:', error.message);
+    // Return cached if available
+    if (calendarCache.data) {
+      return res.json(calendarCache.data);
+    }
+    res.status(502).json({ error: 'Failed to fetch calendar data.' });
+  }
+});
+
+// --- Group Discussion (SSE) ---
+
+app.post('/api/group-chat', rateLimit(60000, 10), async (req, res) => {
+  var { characterIds, topic } = req.body;
+
+  if (!Array.isArray(characterIds) || characterIds.length < 2 || characterIds.length > 5) {
+    return res.status(400).json({ error: 'Select 2-5 characters.' });
+  }
+  if (!topic || typeof topic !== 'string' || !topic.trim()) {
+    return res.status(400).json({ error: 'Topic is required.' });
+  }
+  if (topic.length > 2000) {
+    return res.status(400).json({ error: 'Topic too long. Maximum 2000 characters.' });
+  }
+
+  // Verify all character IDs are valid
+  for (var i = 0; i < characterIds.length; i++) {
+    if (!PROMPTS[characterIds[i]]) {
+      return res.status(400).json({ error: 'Unknown character: ' + characterIds[i] });
+    }
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  });
+
+  var send = function (event, data) {
+    res.write('event: ' + event + '\ndata: ' + JSON.stringify(data) + '\n\n');
+  };
+
+  var discussion = [];
+
+  for (var i = 0; i < characterIds.length; i++) {
+    var charId = characterIds[i];
+    var charPrompt = PROMPTS[charId];
+
+    send('agent_start', { characterId: charId });
+
+    try {
+      // Build context with previous speakers
+      var context = 'Discussion topic: ' + topic + '\n\n';
+      if (discussion.length > 0) {
+        context += 'Previous speakers in this discussion:\n';
+        discussion.forEach(function (d) {
+          context += '--- ' + d.name + ' ---\n' + d.response + '\n\n';
+        });
+        context += 'Now it is your turn. Respond to the topic and reference what others have said when relevant. Keep your response concise (2-4 paragraphs). Do not repeat what others already said.';
+      } else {
+        context += 'You are the first to speak. Share your perspective on this topic. Keep it concise (2-4 paragraphs).';
+      }
+
+      var response = await callClaude({
+        systemPrompt: GLOBAL_RESPONSE_STYLE + '\n\n' + charPrompt,
+        userMessage: context,
+        webSearch: true,
+        model: AGENT_MODELS[charId],
+      });
+
+      // Find character name from CHARS-like lookup
+      var charName = charId;
+      discussion.push({ characterId: charId, name: charName, response: response });
+      send('agent_done', { characterId: charId, response: response });
+    } catch (error) {
+      console.error('Group Chat Error (' + charId + '):', error.message);
+      send('agent_error', { characterId: charId, error: 'Failed to get response.' });
+    }
+  }
+
+  send('complete', {});
+  res.end();
 });
 
 app.listen(PORT, () => {

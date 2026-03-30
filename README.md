@@ -20,6 +20,9 @@ Commodity HQ 模擬一間商品期貨研究辦公室，裡面有 **19 個 AI 分
 - **Multi-Agent Analysis Pipeline | 多 Agent 分析流程** — 4-phase orchestrated analysis (FX+News → Fundamentals → COT+Tech → Quant) with a synthesizer that applies kill criteria and veto framework
 - **Real-time Market Data | 即時行情** — Live quotes from Yahoo Finance, K-line candlestick charts
 - **Databento Integration | Databento 整合** — Historical OHLCV data queries (requires API key)
+- **Correlation Matrix | 相關性矩陣** — Commodity price correlation heatmap (3M/6M/1Y)
+- **Economic Calendar | 經濟日曆** — Upcoming WASDE, FOMC, EIA, NFP, CPI events with countdown
+- **Group Discussion | 群組討論室** — Multi-agent roundtable discussion on any topic
 - **Casino Mini-Games | 賭場小遊戲** — Blackjack, Roulette, Slots, Texas Hold'em
 - **LaTeX Math Rendering | 數學公式渲染** — KaTeX for quantitative responses
 - **Responsive Design | 響應式設計** — Works on desktop and mobile
