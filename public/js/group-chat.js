@@ -29,7 +29,10 @@ var GroupChatManager = (function () {
       var contain = c.avatarContain ? ' avatar-contain' : '';
       html += '<label class="gc-char-option" data-id="' + c.id + '">';
       html += '<input type="checkbox" value="' + c.id + '" class="gc-checkbox">';
+      html += '<div class="gc-char-avatar-wrap">';
       html += '<img src="' + avatarUrl + '" class="gc-char-avatar' + contain + '" alt="' + c.name + '">';
+      html += '<span class="gc-order-badge" style="display:none"></span>';
+      html += '</div>';
       html += '<div class="gc-char-name">' + c.name + '</div>';
       html += '<div class="gc-char-role">' + c.role + '</div>';
       html += '</label>';
@@ -51,8 +54,25 @@ var GroupChatManager = (function () {
           selectedIds = selectedIds.filter(function (id) { return id !== cb.value; });
           label.classList.remove('selected');
         }
+        refreshOrderBadges();
         updateStartBtn();
       });
+    });
+  }
+
+  function refreshOrderBadges() {
+    var grid = el('gc-char-grid');
+    if (!grid) return;
+    grid.querySelectorAll('.gc-char-option').forEach(function (label) {
+      var id = label.dataset.id;
+      var badge = label.querySelector('.gc-order-badge');
+      var idx = selectedIds.indexOf(id);
+      if (idx >= 0) {
+        badge.textContent = idx + 1;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
     });
   }
 

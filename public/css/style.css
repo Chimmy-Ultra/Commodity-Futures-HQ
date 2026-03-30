@@ -2427,7 +2427,17 @@ body {
 .gc-char-option:hover { background: var(--accent-light); }
 .gc-char-option.selected { border-color: var(--accent); background: var(--accent-light); }
 .gc-char-option input[type="checkbox"] { display: none; }
-.gc-char-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-bottom: 4px; }
+.gc-char-avatar-wrap { position: relative; width: 40px; height: 40px; margin-bottom: 4px; }
+.gc-char-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.gc-order-badge {
+  position: absolute; top: -4px; right: -4px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-size: 11px; font-weight: 700;
+  align-items: center; justify-content: center;
+  border: 2px solid var(--bg-card);
+  line-height: 1;
+}
 .gc-char-name { font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.2; }
 .gc-char-role { font-size: 9px; color: var(--text-muted); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 76px; }
 .gc-topic-row { display: flex; gap: 8px; align-items: center; }
