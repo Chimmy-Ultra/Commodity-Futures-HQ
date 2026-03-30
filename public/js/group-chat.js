@@ -146,30 +146,31 @@ var GroupChatManager = (function () {
         throw new Error(errData.error || 'Request failed');
       }
 
-      // SSE stream — currentEvent persists across read() chunks
+      // SSE stream — accumulate until \n\n (complete event boundary)
       var reader = res.body.getReader();
       var decoder = new TextDecoder();
       var buffer = '';
-      var currentEvent = null;
 
       while (true) {
         var result = await reader.read();
         if (result.done) break;
-
         buffer += decoder.decode(result.value, { stream: true });
-        var lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // keep incomplete line
 
-        for (var i = 0; i < lines.length; i++) {
-          var line = lines[i];
-          if (line.indexOf('event: ') === 0) {
-            currentEvent = line.substring(7).trim();
-          } else if (line.indexOf('data: ') === 0 && currentEvent) {
-            try {
-              var data = JSON.parse(line.substring(6));
-              handleSSE(currentEvent, data);
-            } catch (e) { /* skip parse errors */ }
-            currentEvent = null;
+        // Process all complete events (delimited by \n\n)
+        var boundary;
+        while ((boundary = buffer.indexOf('\n\n')) !== -1) {
+          var block = buffer.substring(0, boundary);
+          buffer = buffer.substring(boundary + 2);
+
+          var evt = null, dataStr = null;
+          var blockLines = block.split('\n');
+          for (var bi = 0; bi < blockLines.length; bi++) {
+            var bl = blockLines[bi];
+            if (bl.indexOf('event: ') === 0) evt = bl.substring(7).trim();
+            if (bl.indexOf('data: ') === 0) dataStr = bl.substring(6);
+          }
+          if (evt && dataStr) {
+            try { handleSSE(evt, JSON.parse(dataStr)); } catch (e) { /* skip */ }
           }
         }
       }
@@ -193,7 +194,8 @@ var GroupChatManager = (function () {
       removeTypingIndicator();
       var c = getChar(data.characterId);
       if (c) {
-        var avatarHtml = window.avatarImg ? window.avatarImg(c.avatar, 36, c.avatarContain) : '';
+        var containCls = c.avatarContain ? ' avatar-contain' : '';
+        var avatarHtml = '<img src="' + c.avatar + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover" class="' + containCls + '" alt="' + c.name + '">';
         addMessage(c.id, c.name, c.color, avatarHtml, data.response);
       }
     } else if (event === 'agent_error') {
