@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgriAnalytics HQ</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.7/marked.min.js" integrity="sha512-gMHLBJpKKBLBDBOJHZTMhFH/VbFGxUMhKOdpjEMBahlFNgEm1FCVwvB7Sfnvlw/+WOaIiMDGP7yjTKXDU5QRg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js" integrity="sha512-wKnMWr/gAOOLR8eMfJ/1J6CqN0JhBDCVEsYwWVnRs/djVqf0/ViVRVMJg5sBT0Lbhv7rj6SvEnFxFgHGvfBQ==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css" integrity="sha512-0aPQyyeZrWJ9JnqnMPPmw0sR9bFiAUdN3vCJTnLGJMyzuDnYFYlQ+PV/6mluIWeDMPjVL9jmKdp/gYqUHHuVQ==" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" integrity="sha512-EBLzUfofwLcB0ZnMX+sPpKMJsicZ0hQfOKBpFLMJfl7BDBbkCpjdVS8KRHSdNRxSXGXHGOFvFVHiKwyHaFeBw==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/python.min.js" integrity="sha512-/y8mMJMHCUMwPc2E43OH1sVDGVPhdvQVkVbxqGHQ/ejuSFkoNqiQLMFCB5+mcGMjEFAtxzkIbAXaWZ0gKlbB3A==" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar Overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">AgriAnalytics HQ</div>
+      <div class="sidebar-subtitle">Commodity Intelligence Platform</div>
+    </div>
+    <div class="sidebar-list" id="sidebar-list">
+      <!-- populated by main.js -->
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-tools">
+        <div class="sidebar-tool-entry" id="report-entry">&#x1F4CB; Saved Reports</div>
+        <div class="sidebar-tool-entry danger" id="clear-all-chats">&#x1F5D1; Clear All Chats</div>
+      </div>
+      <button class="sidebar-toggle" id="sidebar-collapse">
+        &#x2190; Collapse
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Topbar (mobile only) -->
+    <div class="topbar" id="topbar">
+      <button class="hamburger" id="hamburger">&#x2630;</button>
+      <div>
+        <div class="topbar-title" id="topbar-title">AgriAnalytics HQ</div>
+        <div class="topbar-role" id="topbar-role">Select an analyst</div>
+      </div>
+    </div>
+
+    <!-- Home Page (replaces old welcome + analysis-bar) -->
+    <div class="welcome home-page" id="welcome">
+      <div class="home-hero">
+        <div class="home-logo">AgriAnalytics HQ</div>
+        <div class="home-sub">Commodity Intelligence Platform</div>
+      </div>
+
+      <!-- Quick Analysis -->
+      <div class="home-analysis-bar">
+        <div class="home-analysis-row">
+          <select id="commodity-select"></select>
+          <button class="btn-analyze" id="btn-quick-analyze">&#x1F50D; &#x4E00;&#x9375;&#x5206;&#x6790;</button>
+        </div>
+        <div class="home-analysis-row">
+          <input type="text" id="custom-question" placeholder="&#x81EA;&#x8A02;&#x554F;&#x984C;&#xFF0C;&#x4F8B;&#xFF1A;&#x7389;&#x7C73;&#x73FE;&#x5728;&#x53EF;&#x4EE5;&#x505A;&#x591A;&#x55CE;&#xFF1F;">
+          <button class="btn-analyze secondary" id="btn-custom-analyze">Ask All Agents</button>
+        </div>
+      </div>
+
+      <!-- Team Section -->
+      <div class="home-section">
+        <div class="home-section-title">Team</div>
+        <div class="home-team-grid" id="home-team-grid">
+          <!-- populated by main.js -->
+        </div>
+      </div>
+
+      <!-- Tools Section -->
+      <div class="home-section">
+        <div class="home-section-title">Tools</div>
+        <div class="home-tools-grid">
+          <div class="home-tool-card" id="home-kline">
+            <div class="home-tool-icon">&#x1F4CA;</div>
+            <div class="home-tool-title">K-Line Charts</div>
+            <div class="home-tool-desc">Candlestick charts for commodity futures</div>
+          </div>
+          <div class="home-tool-card" id="home-reports">
+            <div class="home-tool-icon">&#x1F4CB;</div>
+            <div class="home-tool-title">Saved Reports</div>
+            <div class="home-tool-desc">View past analysis reports</div>
+          </div>
+          <div class="home-tool-card" id="home-databento">
+            <div class="home-tool-icon">&#x1F50D;</div>
+            <div class="home-tool-title">Databento Query</div>
+            <div class="home-tool-desc">Historical OHLCV data lookup</div>
+          </div>
+          <div class="home-tool-card" id="home-casino">
+            <div class="home-tool-icon">&#x1F3B2;</div>
+            <div class="home-tool-title">Casino</div>
+            <div class="home-tool-desc">Blackjack, Roulette, Slots, Poker</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Reports -->
+      <div class="home-section">
+        <div class="home-section-title">Recent Reports</div>
+        <div class="home-reports-grid" id="home-recent-reports">
+          <div class="databento-empty" style="grid-column:1/-1">No reports yet. Run an analysis to get started.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis Panel -->
+    <div class="analysis-panel" id="analysis-panel">
+      <div class="analysis-header">
+        <div>
+          <div class="analysis-title" id="analysis-title">Analysis</div>
+          <div class="analysis-subtitle" id="analysis-subtitle"></div>
+        </div>
+        <button class="btn-icon" id="analysis-close" title="Close analysis">&#x2715;</button>
+      </div>
+      <div class="analysis-agents" id="analysis-agents"></div>
+      <div class="analysis-detail" id="analysis-detail"></div>
+      <div class="analysis-report" id="analysis-report"></div>
+    </div>
+
+    <!-- Report History Panel -->
+    <div class="report-panel" id="report-panel">
+      <div class="report-panel-header">
+        <div>
+          <div class="report-panel-title">&#x1F4CB; Saved Reports</div>
+          <div class="report-panel-sub">Analysis reports are auto-saved here.</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="report-panel-btn-clear" id="report-clear-all" title="Delete all reports">Clear All</button>
+          <button class="btn-icon" id="report-panel-close" title="Close">&#x2715;</button>
+        </div>
+      </div>
+      <div class="report-list" id="report-list"></div>
+    </div>
+
+    <!-- K-Line Chart Panel -->
+    <div class="kline-panel" id="kline-panel">
+      <div class="kline-header">
+        <div class="kline-controls">
+          <select id="kline-symbol"></select>
+          <div class="kline-interval-btns" id="kline-intervals"></div>
+          <div class="kline-interval-btns" id="kline-ranges"></div>
+        </div>
+        <button class="btn-icon" id="kline-close" title="Close">&#x2715;</button>
+      </div>
+      <div class="kline-chart-container">
+        <div id="kline-chart" style="width:100%;height:100%"></div>
+        <div id="kline-loader" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;background:rgba(255,255,255,0.7);font-size:14px;color:var(--text-muted)">Loading...</div>
+      </div>
+      <div id="kline-status" style="padding:8px 20px;font-size:12px;color:var(--error)"></div>
+    </div>
+
+    <!-- Databento Panel -->
+    <div class="databento-panel" id="databento-panel">
+      <div class="databento-header">
+        <div style="font-weight:700;font-size:16px;color:var(--text)">Databento Historical Query</div>
+        <button class="btn-icon" id="db-close" title="Close">&#x2715;</button>
+      </div>
+      <div class="databento-form">
+        <div class="databento-field">
+          <label>Dataset</label>
+          <select id="db-dataset"></select>
+        </div>
+        <div class="databento-field">
+          <label>Symbol</label>
+          <input type="text" id="db-symbols" value="ES.FUT" placeholder="e.g. ES.FUT">
+        </div>
+        <div class="databento-field">
+          <label>Start</label>
+          <input type="date" id="db-start" value="2024-01-01">
+        </div>
+        <div class="databento-field">
+          <label>End</label>
+          <input type="date" id="db-end" value="2024-03-01">
+        </div>
+        <div class="databento-field">
+          <label>Schema</label>
+          <select id="db-schema"></select>
+        </div>
+        <button class="btn-analyze" id="db-query-btn">Query</button>
+      </div>
+      <div id="db-status" style="padding:4px 20px;font-size:12px;color:var(--text-muted)"></div>
+      <div class="databento-results" id="db-results">
+        <div class="databento-empty">No data. Run a query to see results.</div>
+      </div>
+      <div class="databento-export">
+        <button class="btn-analyze secondary" id="db-export-btn">Export CSV</button>
+      </div>
+    </div>
+
+    <!-- Quote Panel -->
+    <div class="quote-panel" id="quote-panel">
+      <div class="quote-header">
+        <div>
+          <div class="quote-eyebrow">Live Market Context</div>
+          <div class="quote-title" id="quote-title">Desk Snapshot</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="quote-source" id="quote-source">Yahoo Finance</div>
+          <button class="btn-icon" id="quote-close" title="Close">&#x2715;</button>
+        </div>
+      </div>
+      <div class="quote-status" id="quote-status"></div>
+      <div class="quote-grid" id="quote-grid"></div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-area" id="chat-area">
+      <div class="chat-header-bar" id="chat-header-bar">
+        <div class="chat-header-avatar" id="chat-header-avatar"></div>
+        <div class="chat-header-info">
+          <div class="chat-header-name" id="chat-header-name"></div>
+          <div class="chat-header-role" id="chat-header-role"></div>
+        </div>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-area">
+        <div class="chat-input-row">
+          <div class="actions-left">
+            <button class="btn-icon" id="chat-clear-btn" title="Clear conversation">&#x1F5D1;</button>
+          </div>
+          <textarea id="chat-input" placeholder="Ask about markets..." rows="1"></textarea>
+          <button class="btn-icon" id="send-btn">&#x27A4;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Casino Popup -->
+<div class="casino-popup" id="casino-popup">
+  <div class="casino-popup-backdrop" id="casino-popup-backdrop"></div>
+  <div class="casino-popup-card">
+    <div class="casino-popup-title">&#x1F3B2; Casino</div>
+    <div class="casino-popup-games">
+      <button data-game="blackjack" class="casino-popup-btn">&#x1F0CF;<span>Blackjack</span></button>
+      <button data-game="roulette" class="casino-popup-btn">&#x1F3B0;<span>Roulette</span></button>
+      <button data-game="slots" class="casino-popup-btn">&#x1F352;<span>Slots</span></button>
+      <button data-game="poker" class="casino-popup-btn">&#x2660;&#xFE0F;<span>Texas Hold'em</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Roulette Overlay -->
+<div id="roulette-overlay">
+  <div class="rl-backdrop" id="rl-backdrop"></div>
+  <div class="rl-shell">
+    <div class="rl-header">
+      <div>
+        <div class="rl-kicker">Casino Table</div>
+        <div class="rl-title">Roulette with Claude</div>
+        <div class="rl-flavor" id="rl-flavor">Claude insists the wheel is constitutionally fair.</div>
+      </div>
+      <button class="rl-close" id="rl-close">&#x2715;</button>
+    </div>
+    <div class="rl-body">
+      <div class="rl-top-bar">
+        <div class="rl-balance">Balance: <span id="rl-balance">1000</span></div>
+        <div class="rl-chips">
+          <span class="rl-chip-label">Chip:</span>
+          <button class="rl-chip active" data-val="10">10</button>
+          <button class="rl-chip" data-val="25">25</button>
+          <button class="rl-chip" data-val="50">50</button>
+          <button class="rl-chip" data-val="100">100</button>
+        </div>
+      </div>
+      <div class="rl-result" id="rl-result">
+        <div class="rl-result-num" id="rl-result-num">&mdash;</div>
+        <div class="rl-result-label" id="rl-result-label">Place your bets</div>
+      </div>
+      <div class="rl-board" id="rl-board"></div>
+      <div class="rl-actions">
+        <button class="rl-btn ghost" id="rl-clear">Clear Bets</button>
+        <button class="rl-btn primary" id="rl-spin">SPIN!</button>
+      </div>
+      <div class="rl-status" id="rl-status">Click a number or area to place a bet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slots Overlay -->
+<div id="slots-overlay">
+  <div class="sl-backdrop" id="sl-backdrop"></div>
+  <div class="sl-shell">
+    <div class="sl-header">
+      <div>
+        <div class="sl-kicker">Casino Table</div>
+        <div class="sl-title">Slots with Claude</div>
+        <div class="sl-flavor" id="sl-flavor">Gary says the RNG is just vibes.</div>
+      </div>
+      <button class="sl-close" id="sl-close">&#x2715;</button>
+    </div>
+    <div class="sl-body">
+      <div class="sl-top-bar">
+        <div class="sl-balance">Balance: <span id="sl-balance">1000</span></div>
+        <div class="sl-bet-row">
+          <span class="sl-bet-label">Bet:</span>
+          <button class="sl-bet-btn active" data-val="10">10</button>
+          <button class="sl-bet-btn" data-val="25">25</button>
+          <button class="sl-bet-btn" data-val="50">50</button>
+          <button class="sl-bet-btn" data-val="100">100</button>
+        </div>
+      </div>
+      <div class="sl-machine">
+        <div class="sl-reels">
+          <div class="sl-reel-window"><div class="sl-reel" id="sl-reel-0"></div></div>
+          <div class="sl-reel-window"><div class="sl-reel" id="sl-reel-1"></div></div>
+          <div class="sl-reel-window"><div class="sl-reel" id="sl-reel-2"></div></div>
+        </div>
+        <div class="sl-winline"></div>
+      </div>
+      <div class="sl-paytable">
+        <div class="sl-pay-row"><span>&#x2B50;&#x2B50;&#x2B50;</span><span>&#xD7;50</span></div>
+        <div class="sl-pay-row"><span>7&#xFE0F;&#x20E3;7&#xFE0F;&#x20E3;7&#xFE0F;&#x20E3;</span><span>&#xD7;20</span></div>
+        <div class="sl-pay-row"><span>&#x1F48E;&#x1F48E;&#x1F48E;</span><span>&#xD7;10</span></div>
+        <div class="sl-pay-row"><span>&#x1F514;&#x1F514;&#x1F514;</span><span>&#xD7;5</span></div>
+        <div class="sl-pay-row"><span>&#x1F352;&#x1F352;&#x1F352;</span><span>&#xD7;3</span></div>
+        <div class="sl-pay-row"><span>&#x1F34B;&#x1F34B;&#x1F34B;</span><span>&#xD7;2</span></div>
+      </div>
+      <div class="sl-actions">
+        <button class="sl-btn primary" id="sl-pull">PULL LEVER!</button>
+      </div>
+      <div class="sl-status" id="sl-status">Pull the lever to spin!</div>
+    </div>
+  </div>
+</div>
+
+<!-- Blackjack Overlay -->
+<div id="blackjack-overlay">
+  <div class="bj-backdrop" id="bj-backdrop"></div>
+  <div class="bj-shell">
+    <div class="bj-header">
+      <div>
+        <div class="bj-kicker">Casino Table</div>
+        <div class="bj-title">Blackjack with Claude</div>
+        <div class="bj-flavor" id="blackjack-flavor">Dario is dealing tonight and insists the shuffle is constitutionally aligned.</div>
+      </div>
+      <button class="bj-close" id="blackjack-close">&#x2715;</button>
+    </div>
+    <div class="bj-felt">
+      <div class="bj-hands">
+        <section class="bj-hand">
+          <div class="bj-hand-header">
+            <div class="bj-hand-name">Dealer</div>
+            <div class="bj-total" id="dealer-total">Total: ?</div>
+          </div>
+          <div class="bj-cards" id="dealer-cards"></div>
+        </section>
+        <section class="bj-hand">
+          <div class="bj-hand-header">
+            <div class="bj-hand-name">You</div>
+            <div class="bj-total" id="player-total">Total: 0</div>
+          </div>
+          <div class="bj-cards" id="player-cards"></div>
+        </section>
+      </div>
+      <div class="bj-status" id="blackjack-status">Press New Game to start.</div>
+      <div class="bj-actions">
+        <button class="bj-btn primary" id="blackjack-hit">Hit</button>
+        <button class="bj-btn secondary" id="blackjack-stand">Stand</button>
+        <button class="bj-btn ghost" id="blackjack-new">New Game</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Poker Overlay -->
+<div id="poker-overlay">
+  <div class="pk-backdrop" id="pk-backdrop"></div>
+  <div class="pk-shell">
+    <div class="pk-header">
+      <div>
+        <div class="pk-kicker">Casino Table</div>
+        <div class="pk-title">Texas Hold'em</div>
+        <div class="pk-flavor" id="pk-flavor">The office poker night is on.</div>
+      </div>
+      <button class="pk-close" id="pk-close">&#x2715;</button>
+    </div>
+    <div class="pk-body">
+      <div class="pk-phase-bar">
+        <div class="pk-phase-dot" id="pk-phase-preflop">Pre</div>
+        <div class="pk-phase-line"></div>
+        <div class="pk-phase-dot" id="pk-phase-flop">Flop</div>
+        <div class="pk-phase-line"></div>
+        <div class="pk-phase-dot" id="pk-phase-turn">Turn</div>
+        <div class="pk-phase-line"></div>
+        <div class="pk-phase-dot" id="pk-phase-river">River</div>
+      </div>
+      <div class="pk-opponents" id="pk-opponents"></div>
+      <div class="pk-table-center">
+        <div class="pk-community" id="pk-community"></div>
+        <div class="pk-pot" id="pk-pot">Pot: $0</div>
+      </div>
+      <div class="pk-player-area">
+        <div class="pk-player-label" id="pk-player-label">You</div>
+        <div class="pk-player-cards" id="pk-player-cards"></div>
+        <div class="pk-player-chips" id="pk-player-chips">$1000</div>
+        <div class="pk-hand-info" id="pk-hand-info" style="display:none"></div>
+      </div>
+      <div class="pk-controls">
+        <button class="pk-btn ghost" id="pk-fold" disabled>Fold</button>
+        <button class="pk-btn secondary" id="pk-check" disabled>Check</button>
+        <div class="pk-raise-group">
+          <button class="pk-btn primary" id="pk-raise" disabled>Raise</button>
+          <input type="range" id="pk-raise-slider" min="20" max="1000" value="40" disabled>
+          <span class="pk-raise-amount" id="pk-raise-amount">$40</span>
+        </div>
+      </div>
+      <div class="pk-status" id="pk-status">Press New Game to start.</div>
+      <div class="pk-actions">
+        <button class="pk-btn ghost" id="pk-new">New Game</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/characters.js"></script>
+<script src="js/quotes.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/blackjack.js"></script>
+<script src="js/roulette.js"></script>
+<script src="js/slots.js"></script>
+<script src="js/poker.js"></script>
+<script src="js/kline.js"></script>
+<script src="js/databento.js"></script>
+<script src="js/analysis.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
