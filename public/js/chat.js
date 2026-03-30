@@ -1,7 +1,7 @@
 /* chat.js — Chat panel logic */
 
 var ChatManager = (function () {
-  var STORAGE_KEY = 'agrianalytics-chat-memory-v1';
+  var STORAGE_KEY = 'commodity-hq-chat-memory-v1';
   var convos = {};
   var activeChar = null;
   var isLoading = false;

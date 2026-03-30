@@ -202,6 +202,6 @@ app.post('/api/databento/query', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`AgriAnalytics HQ running on http://localhost:${PORT}`);
+  console.log(`Commodity HQ running on http://localhost:${PORT}`);
   console.log('AI backend: Claude CLI (Max subscription)');
 });

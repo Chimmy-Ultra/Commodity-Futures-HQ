@@ -4,7 +4,7 @@ var AnalysisManager = (function () {
   var abortController = null;
   var isRunning = false;
   var agentResponses = {};
-  var REPORTS_KEY = 'agrianalytics-reports-v1';
+  var REPORTS_KEY = 'commodity-hq-reports-v1';
   var currentTitle = '';
 
   // Safe markdown rendering with DOMPurify

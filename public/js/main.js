@@ -54,7 +54,7 @@
     var grid = document.getElementById('home-recent-reports');
     if (!grid) return;
     try {
-      var raw = localStorage.getItem('agrianalytics-reports-v1');
+      var raw = localStorage.getItem('commodity-hq-reports-v1');
       if (!raw) { grid.innerHTML = '<div class="databento-empty" style="grid-column:1/-1">No reports yet. Run an analysis to get started.</div>'; return; }
       var reports = JSON.parse(raw);
       if (!reports.length) { grid.innerHTML = '<div class="databento-empty" style="grid-column:1/-1">No reports yet.</div>'; return; }
@@ -107,7 +107,7 @@
     if (dp) dp.classList.remove('visible');
     document.getElementById('welcome').style.display = '';
     buildHomeRecentReports();
-    document.getElementById('topbar-title').textContent = 'AgriAnalytics HQ';
+    document.getElementById('topbar-title').textContent = 'Commodity HQ';
     document.getElementById('topbar-role').textContent = 'Select an analyst';
   }
 

@@ -1,7 +1,7 @@
 {
-  "name": "agrianalytics-hq",
+  "name": "commodity-hq",
   "version": "1.0.0",
-  "description": "Virtual office simulator for agricultural futures analysis",
+  "description": "Virtual office simulator for commodity futures analysis",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

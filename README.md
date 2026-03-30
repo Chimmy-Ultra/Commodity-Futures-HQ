@@ -1,4 +1,4 @@
-# AgriAnalytics HQ
+# Commodity HQ
 
 A virtual office simulator for agricultural commodity futures analysis, powered by Claude AI.
 
@@ -10,9 +10,9 @@ A virtual office simulator for agricultural commodity futures analysis, powered 
 
 ## What is this? | 這是什麼？
 
-AgriAnalytics HQ simulates a commodity trading research office with **19 AI-powered analysts**, each with a unique personality, specialty, and prompt. You can chat with them individually or run a **multi-agent analysis pipeline** that orchestrates 4 phases of research and produces a synthesized report.
+Commodity HQ simulates a commodity trading research office with **19 AI-powered analysts**, each with a unique personality, specialty, and prompt. You can chat with them individually or run a **multi-agent analysis pipeline** that orchestrates 4 phases of research and produces a synthesized report.
 
-AgriAnalytics HQ 模擬一間商品期貨研究辦公室，裡面有 **19 個 AI 分析師**，每個人都有獨立的個性、專長和 prompt。你可以跟他們單獨聊天，也可以啟動**多 Agent 分析流程**，自動跑 4 階段研究並產出綜合報告。
+Commodity HQ 模擬一間商品期貨研究辦公室，裡面有 **19 個 AI 分析師**，每個人都有獨立的個性、專長和 prompt。你可以跟他們單獨聊天，也可以啟動**多 Agent 分析流程**，自動跑 4 階段研究並產出綜合報告。
 
 ### Features | 功能
 
@@ -62,8 +62,8 @@ AgriAnalytics HQ 模擬一間商品期貨研究辦公室，裡面有 **19 個 AI
 
 ```bash
 # Clone the repo | 複製 repo
-git clone https://github.com/Chimmy-Ultra/agrianalytics-hq.git
-cd agrianalytics-hq
+git clone https://github.com/Chimmy-Ultra/commodity-hq.git
+cd commodity-hq
 
 # Install dependencies | 安裝依賴
 npm install

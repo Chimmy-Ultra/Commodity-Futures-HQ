@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 >nul
-title AgriAnalytics HQ
+title Commodity HQ
 
 echo ============================================
-echo    AgriAnalytics HQ 啟動中...
+echo    Commodity HQ 啟動中...
 echo ============================================
 echo.
 
