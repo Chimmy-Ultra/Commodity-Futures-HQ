@@ -62,7 +62,7 @@ These 11 characters are **chat-only** companions. They do **NOT** participate in
 
 | Name | ID | Role | Model | Live Panel | 職位 |
 |------|----|------|-------|------------|------|
-| Dario | `dario` | "Anthropic CEO (?)" | Sonnet | ✅ | 誤入農產品公司的 AI 安全專家 |
+| Dario | `dario` | "Anthropic CEO " | Sonnet | ✅ | 誤入農產品公司的 AI 安全專家 |
 | Sam | `sam` | "OpenAI CEO (?)" | Sonnet | ✅ | 神秘出現的 AGI 佈道者 |
 | Gary | `slacker` | Office Slacker | Sonnet | ✅ | 辦公室擺爛王 |
 | Luna | `luna` | English Coach | Opus | — | 英語教練 |
