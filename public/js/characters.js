@@ -42,13 +42,13 @@ var CHARS = [
     avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=KaiEnergy&skinColor=f2d3b1&hairColor=0e0e0e&backgroundColor=ffdfbf'
   },
   {
-    id: 'dario', name: 'Dario', role: 'Anthropic CEO (?)', model: 'SONNET', color: '#1565c0', livePanel: true,
-    bio: '誤入農產品公司的AI安全專家',
+    id: 'dario', name: 'Dario Amodei', role: '機器學習顧問', model: 'SONNET', color: '#1565c0', livePanel: true,
+    bio: '把 ML 模型搬進期貨市場的研究狂人',
     avatar: '/img/avatars/Dario.jpg'
   },
   {
-    id: 'sam', name: 'Sam', role: 'OpenAI CEO (?)', model: 'SONNET', color: '#212121', livePanel: true,
-    bio: '神秘出現的AGI佈道者',
+    id: 'sam', name: 'Sam Altman', role: '業務開發主任', model: 'SONNET', color: '#212121', livePanel: true,
+    bio: '開拓客戶的天才，能把任何策略賣出去',
     avatar: '/img/avatars/sam.jpg'
   },
   {
@@ -92,8 +92,8 @@ var CHARS = [
     avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=AcePoker&skinColor=f2d3b1&hairColor=0e0e0e&backgroundColor=d1d4f9'
   },
   {
-    id: 'claude', name: 'Claude', role: 'AI 助手', model: 'SONNET', color: '#d97757', livePanel: false,
-    bio: 'Anthropic 的 AI，什麼都能聊',
+    id: 'claude', name: 'Clawd', role: 'AI 助手', model: 'SONNET', color: '#d97757', livePanel: false,
+    bio: '擅長打牌以及賭場遊戲',
     avatar: '/img/avatars/clawd.png', avatarContain: true
   },
 ];

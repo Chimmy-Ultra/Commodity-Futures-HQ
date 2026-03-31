@@ -62,8 +62,8 @@ These 11 characters are **chat-only** companions. They do **NOT** participate in
 
 | Name | ID | Role | Model | Live Panel | 職位 |
 |------|----|------|-------|------------|------|
-| Dario | `dario` | "Anthropic CEO " | Sonnet | ✅ | 誤入農產品公司的 AI 安全專家 |
-| Sam | `sam` | "OpenAI CEO (?)" | Sonnet | ✅ | 神秘出現的 AGI 佈道者 |
+| Dario Amodei | `dario` | ML Consultant | Sonnet | ✅ | 機器學習顧問 |
+| Sam Altman | `sam` | Business Development Director | Sonnet | ✅ | 業務開發主任 |
 | Gary | `slacker` | Office Slacker | Sonnet | ✅ | 辦公室擺爛王 |
 | Luna | `luna` | English Coach | Opus | — | 英語教練 |
 | Ming | `intern` | Intern | Sonnet | — | 實習生 |
@@ -72,7 +72,7 @@ These 11 characters are **chat-only** companions. They do **NOT** participate in
 | Sophie | `risk` | Devil's Advocate / Risk | Sonnet | — | 魔鬼代言人 / 風控 |
 | Dev | `dev` | Python Code Generator | Sonnet | — | 程式碼產生器 |
 | Ace | `poker` | Poker Philosopher | Sonnet | — | 撲克哲學家 |
-| Claude | `claude` | AI Assistant | Sonnet | — | AI 助手 |
+| Clawd | `claude` | AI Assistant | Sonnet | — | AI 助手 |
 
 ---
 
