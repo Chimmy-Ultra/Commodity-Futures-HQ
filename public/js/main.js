@@ -13,20 +13,55 @@
     return '<img src="' + url + '" alt=""' + cls + ' width="' + s + '" height="' + s + '" loading="lazy">';
   }
 
-  // --- Sidebar rendering ---
-  function buildSidebar() {
-    var list = document.getElementById('sidebar-list');
-    list.innerHTML = '';
-    CHARS.forEach(function (c) {
-      var card = document.createElement('div');
-      card.className = 'char-card';
-      card.dataset.id = c.id;
-      card.innerHTML =
-        '<div class="char-avatar">' + avatarImg(c.avatar, 38, c.avatarContain) + '</div>' +
-        '<div class="char-info"><div class="char-name">' + c.name + '</div><div class="char-role">' + c.role + '</div></div>' +
-        '<span class="char-badge ' + c.model.toLowerCase() + '">' + c.model + '</span>';
-      card.addEventListener('click', function () { selectChar(c); });
-      list.appendChild(card);
+  // --- Sidebar nav ---
+  function initSidebarNav() {
+    var navMap = {
+      'nav-home': function () { showHome(); },
+      'nav-kline': function () { KlineManager.show(); },
+      'nav-corr': function () { CorrelationManager.show(); },
+      'nav-cal': function () { CalendarManager.show(); },
+      'nav-gc': function () { GroupChatManager.show(); },
+      'nav-reports': function () { AnalysisManager.showReportPanel(); },
+      'nav-databento': function () { DatabentoManager.show(); },
+    };
+    Object.keys(navMap).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('click', function () {
+        if (isMobile()) closeSidebar();
+        navMap[id]();
+        // highlight active nav
+        document.querySelectorAll('.sidebar-nav-item').forEach(function (n) { n.classList.remove('active'); });
+        el.classList.add('active');
+      });
+    });
+  }
+
+  // --- Sidebar ticker ---
+  var tickerTimer = null;
+  function fetchSidebarTicker() {
+    fetch('/api/quotes/sidebar').then(function (r) { return r.json(); }).then(function (data) {
+      var container = document.getElementById('sidebar-ticker');
+      if (!container || !data.quotes) return;
+      container.innerHTML = '';
+      data.quotes.forEach(function (q) {
+        var row = document.createElement('div');
+        row.className = 'sidebar-ticker-item';
+        var changeClass = (q.changePercent > 0) ? 'tk-up' : (q.changePercent < 0) ? 'tk-down' : 'tk-flat';
+        var changeStr = q.changePercent != null ? (q.changePercent >= 0 ? '+' : '') + q.changePercent.toFixed(2) + '%' : '';
+        var priceStr = q.price != null ? q.price.toFixed(q.precision || 2) : '—';
+        row.innerHTML =
+          '<div class="tk-label">' + q.label + '</div>' +
+          '<div class="tk-price">' + priceStr + '</div>' +
+          '<div class="tk-change ' + changeClass + '">' + changeStr + '</div>';
+        row.addEventListener('click', function () {
+          KlineManager.show(q.symbol);
+          if (isMobile()) closeSidebar();
+        });
+        container.appendChild(row);
+      });
+    }).catch(function () {
+      var container = document.getElementById('sidebar-ticker');
+      if (container) container.innerHTML = '<div class="sidebar-ticker-loading">Failed to load</div>';
     });
   }
 
@@ -86,17 +121,9 @@
     return days + 'd ago';
   }
 
-  function highlightCard(charId) {
-    var cards = document.querySelectorAll('.char-card');
-    cards.forEach(function (card) {
-      card.classList.toggle('active', card.dataset.id === charId);
-    });
-  }
-
   // --- Show home page ---
   function showHome() {
     selectedCharId = null;
-    highlightCard('');
     document.getElementById('chat-area').classList.remove('visible');
     document.getElementById('analysis-panel').classList.remove('visible');
     document.getElementById('report-panel').classList.remove('visible');
@@ -120,7 +147,6 @@
   // --- Character selection ---
   function selectChar(c) {
     selectedCharId = c.id;
-    highlightCard(c.id);
     ChatManager.open(c);
     document.getElementById('welcome').style.display = 'none';
     var kp = document.getElementById('kline-panel');
@@ -175,19 +201,17 @@
 
   // --- Init ---
   document.addEventListener('DOMContentLoaded', function () {
-    buildSidebar();
+    initSidebarNav();
     buildHomeTeamGrid();
     buildHomeRecentReports();
+    fetchSidebarTicker();
+    tickerTimer = setInterval(fetchSidebarTicker, 45000);
 
     document.getElementById('hamburger').addEventListener('click', toggleSidebar);
     document.getElementById('sidebar-collapse').addEventListener('click', closeSidebar);
     document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
     document.querySelector('.sidebar-logo').addEventListener('click', showHome);
 
-    document.getElementById('report-entry').addEventListener('click', function () {
-      if (isMobile()) closeSidebar();
-      AnalysisManager.showReportPanel();
-    });
     document.getElementById('clear-all-chats').addEventListener('click', function () {
       if (isMobile()) closeSidebar();
       ChatManager.clearAll();

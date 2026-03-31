@@ -27,14 +27,26 @@
       <div class="sidebar-logo">Commodity HQ</div>
       <div class="sidebar-subtitle">Commodity Intelligence Platform</div>
     </div>
-    <div class="sidebar-list" id="sidebar-list">
-      <!-- populated by main.js -->
+
+    <!-- Nav Tools -->
+    <div class="sidebar-nav">
+      <div class="sidebar-nav-item active" id="nav-home">&#x1F3E0; Home</div>
+      <div class="sidebar-nav-item" id="nav-kline">&#x1F4CA; K-Line</div>
+      <div class="sidebar-nav-item" id="nav-corr">&#x1F7E5; Correlation</div>
+      <div class="sidebar-nav-item" id="nav-cal">&#x1F4C5; Calendar</div>
+      <div class="sidebar-nav-item" id="nav-gc">&#x1F5E3;&#xFE0F; Group Chat</div>
+      <div class="sidebar-nav-item" id="nav-reports">&#x1F4CB; Reports</div>
+      <div class="sidebar-nav-item" id="nav-databento">&#x1F50D; Databento</div>
     </div>
+
+    <!-- Live Ticker -->
+    <div class="sidebar-ticker-header">Live Prices</div>
+    <div class="sidebar-ticker" id="sidebar-ticker">
+      <div class="sidebar-ticker-loading">Loading...</div>
+    </div>
+
     <div class="sidebar-footer">
-      <div class="sidebar-tools">
-        <div class="sidebar-tool-entry" id="report-entry">&#x1F4CB; Saved Reports</div>
-        <div class="sidebar-tool-entry danger" id="clear-all-chats">&#x1F5D1; Clear All Chats</div>
-      </div>
+      <div class="sidebar-tool-entry danger" id="clear-all-chats">&#x1F5D1; Clear Chats</div>
       <button class="sidebar-toggle" id="sidebar-collapse">
         &#x2190; Collapse
       </button>
