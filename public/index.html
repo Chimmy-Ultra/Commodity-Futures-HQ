@@ -145,6 +145,11 @@
             <div class="home-tool-title">Texas Hold'em</div>
             <div class="home-tool-desc">德州撲克</div>
           </div>
+          <div class="home-tool-card" id="home-bigtwo">
+            <div class="home-tool-icon">&#x1F0CF;</div>
+            <div class="home-tool-title">Big Two</div>
+            <div class="home-tool-desc">大老二</div>
+          </div>
         </div>
       </div>
 
@@ -522,6 +527,91 @@
   </div>
 </div>
 
+<!-- Big Two Overlay -->
+<div id="bigtwo-overlay">
+  <div class="b2-backdrop" id="b2-backdrop"></div>
+  <div class="b2-shell">
+    <!-- Top bar: title + buttons -->
+    <div class="b2-topbar">
+      <div class="b2-topbar-left">
+        <span class="b2-logo">Big Two</span>
+        <span class="b2-flavor" id="b2-flavor">Sam insists his strategy works.</span>
+      </div>
+      <div class="b2-topbar-right">
+        <button class="b2-help-btn" id="b2-help" title="Rules">?</button>
+        <button class="b2-icon-btn" id="b2-new" title="New Game">&#x21BB;</button>
+        <button class="b2-icon-btn b2-close-btn" id="b2-close" title="Close">&#x2715;</button>
+      </div>
+    </div>
+    <!-- NESW Table -->
+    <div class="b2-table-wrap">
+      <!-- North player (seat 2 = Dario) -->
+      <div class="b2-seat b2-north" id="b2-seat-north"></div>
+      <!-- West player (seat 1 = Sam) -->
+      <div class="b2-seat b2-west" id="b2-seat-west"></div>
+      <!-- Center: played cards + status -->
+      <div class="b2-center">
+        <div class="b2-played" id="b2-played">
+          <div class="b2-empty-table">No cards on table</div>
+        </div>
+        <div class="b2-played-info" id="b2-played-info"></div>
+        <div class="b2-status" id="b2-status">Press New Game to start.</div>
+      </div>
+      <!-- East player (seat 3 = Claude) -->
+      <div class="b2-seat b2-east" id="b2-seat-east"></div>
+      <!-- South: human player hand + actions -->
+      <div class="b2-south">
+        <div class="b2-hand" id="b2-hand"></div>
+        <div class="b2-actions">
+          <button class="b2-btn primary" id="b2-play" disabled>Play</button>
+          <button class="b2-btn secondary" id="b2-pass" disabled>Pass</button>
+        </div>
+      </div>
+    </div>
+    <!-- Rules overlay -->
+    <div class="b2-rules-overlay" id="b2-rules" style="display:none">
+      <div class="b2-rules-content">
+        <h3>Big Two Rules</h3>
+        <div class="b2-rules-section">
+          <h4>Basics</h4>
+          <p>4 players, 52 cards dealt evenly (13 each).<br>Goal: Be the first to play all your cards!</p>
+        </div>
+        <div class="b2-rules-section">
+          <h4>Card Ranking</h4>
+          <p class="b2-rules-rank">2 &gt; A &gt; K &gt; Q &gt; J &gt; 10 &gt; 9 &gt; 8 &gt; 7 &gt; 6 &gt; 5 &gt; 4 &gt; 3</p>
+        </div>
+        <div class="b2-rules-section">
+          <h4>Suit Ranking</h4>
+          <p class="b2-rules-rank">&spades; &gt; &hearts; &gt; &diams; &gt; &clubs;</p>
+        </div>
+        <div class="b2-rules-section">
+          <h4>Combinations</h4>
+          <p><strong>Single</strong> &mdash; 1 card<br>
+          <strong>Pair</strong> &mdash; 2 same rank<br>
+          <strong>Triple</strong> &mdash; 3 same rank<br>
+          <strong>5-card</strong> &mdash; Straight / Flush / Full House / Four of a Kind / Straight Flush</p>
+        </div>
+        <div class="b2-rules-section">
+          <h4>5-Card Hand Ranking</h4>
+          <p class="b2-rules-rank">Straight Flush &gt; Four of a Kind &gt; Full House &gt; Flush &gt; Straight</p>
+        </div>
+        <div class="b2-rules-section">
+          <h4>Straights</h4>
+          <p>Lowest: A-2-3-4-5 &nbsp; Highest: 10-J-Q-K-A<br>
+          <span class="b2-rules-note">Wrap-around allowed (A can precede 2)</span></p>
+        </div>
+        <div class="b2-rules-section">
+          <h4>Gameplay</h4>
+          <p>1. Player with &clubs;3 goes first (must include &clubs;3)<br>
+          2. Next player must play same type but higher, or Pass<br>
+          3. After 3 consecutive passes, last player leads freely<br>
+          4. First to empty their hand wins!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="js/characters.js"></script>
 <script src="js/quotes.js"></script>
 <script src="js/chat.js"></script>
@@ -529,6 +619,7 @@
 <script src="js/roulette.js"></script>
 <script src="js/slots.js"></script>
 <script src="js/poker.js"></script>
+<script src="js/bigtwo.js"></script>
 <script src="js/kline.js"></script>
 <script src="js/databento.js"></script>
 <script src="js/analysis.js"></script>

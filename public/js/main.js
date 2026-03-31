@@ -181,7 +181,7 @@
 
   // --- Casino direct cards ---
   function initCasinoCards() {
-    var map = { 'home-blackjack': Blackjack, 'home-roulette': Roulette, 'home-slots': Slots, 'home-poker': Poker };
+    var map = { 'home-blackjack': Blackjack, 'home-roulette': Roulette, 'home-slots': Slots, 'home-poker': Poker, 'home-bigtwo': BigTwo };
     Object.keys(map).forEach(function (id) {
       var card = document.getElementById(id);
       if (card) card.addEventListener('click', function () { map[id].open(); });
@@ -241,6 +241,7 @@
         Roulette.close();
         Slots.close();
         Poker.close();
+        BigTwo.close();
       }
     });
 

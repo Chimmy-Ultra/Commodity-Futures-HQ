@@ -2126,6 +2126,343 @@ body {
 }
 
 /* ========================================
+   BIG TWO — NESW Table Layout
+   ======================================== */
+#bigtwo-overlay {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 220;
+}
+#bigtwo-overlay.open { display: flex; }
+.b2-backdrop {
+  position: absolute; inset: 0; background: rgba(10, 8, 6, 0.82); backdrop-filter: blur(6px);
+}
+.b2-shell {
+  position: relative; z-index: 1; width: 100vw; height: 100vh;
+  background: radial-gradient(ellipse at 50% 55%, #3a8f55 0%, #2e7a48 30%, #236838 55%, #1b5530 80%, #14422a 100%);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* Top bar */
+.b2-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 16px; flex-shrink: 0;
+  background: rgba(0,0,0,0.18); border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.b2-topbar-left { display: flex; align-items: center; gap: 12px; }
+.b2-logo {
+  font-size: 16px; font-weight: 800; color: #e8b84a;
+  letter-spacing: 0.5px;
+}
+.b2-flavor { font-size: 11px; color: rgba(232, 221, 208, 0.35); font-style: italic; }
+.b2-topbar-right { display: flex; gap: 6px; align-items: center; }
+.b2-help-btn {
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06); color: rgba(232, 221, 208, 0.6); font-size: 15px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+}
+.b2-help-btn:hover { background: rgba(255,255,255,0.12); color: #e8b84a; }
+.b2-icon-btn {
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04); color: rgba(232, 221, 208, 0.5); font-size: 16px;
+  cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+}
+.b2-icon-btn:hover { background: rgba(255,255,255,0.08); color: #e8ddd0; }
+.b2-close-btn:hover { color: #e07060; }
+
+/* ---- Big Two Card Design ---- */
+.b2-card {
+  position: relative; width: 64px; height: 88px; border-radius: 8px;
+  background: #fff; color: #222;
+  border: 2px solid #d0d0d0; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  overflow: hidden; flex-shrink: 0; user-select: none;
+}
+.b2-card.red { color: #cc1111; }
+.b2-card.black { color: #222; }
+/* Top-left corner */
+.b2-card-tl {
+  position: absolute; left: 6px; top: 5px;
+  display: flex; flex-direction: column; align-items: center; line-height: 1;
+}
+.b2-card-rank { font-size: 16px; font-weight: 800; }
+.b2-card-suit { font-size: 12px; margin-top: -1px; }
+/* Bottom-right corner (flipped) */
+.b2-card-br {
+  position: absolute; right: 6px; bottom: 5px;
+  display: flex; flex-direction: column; align-items: center; line-height: 1;
+  transform: rotate(180deg);
+}
+/* Number cards: one large suit in center */
+.b2-card-mid {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; opacity: 0.75;
+}
+/* Ace: huge suit */
+.b2-card-ace {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 42px;
+}
+/* Face cards (J/Q/K): decorative layout */
+.b2-face { background: linear-gradient(180deg, #fff 0%, #f8f4ee 100%); }
+.b2-face.red { background: linear-gradient(180deg, #fff 0%, #fef4f4 100%); }
+.b2-card-face-mid {
+  position: absolute; inset: 20px 6px 20px 6px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid currentColor; border-radius: 4px; opacity: 0.7;
+}
+.b2-face-letter {
+  font-size: 28px; font-weight: 900; line-height: 1;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.b2-face-suit {
+  position: absolute; font-size: 13px; line-height: 1;
+}
+.b2-face-suit.top-l { top: 3px; left: 4px; }
+.b2-face-suit.top-r { top: 3px; right: 4px; }
+.b2-face-suit.bot-l { bottom: 3px; left: 4px; transform: rotate(180deg); }
+.b2-face-suit.bot-r { bottom: 3px; right: 4px; transform: rotate(180deg); }
+/* Card back */
+.b2-card-back {
+  background: linear-gradient(150deg, #c0392b 0%, #922020 50%, #701818 100%);
+  border-color: rgba(180,50,40,0.6);
+}
+.b2-card-back::before {
+  content: ''; position: absolute; inset: 5px; border-radius: 6px;
+  border: 1.5px solid rgba(255,255,255,0.2);
+}
+.b2-card-back::after {
+  content: '\u2666'; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: rgba(255,255,255,0.15);
+}
+
+/* ---- NESW Table Grid ---- */
+.b2-table-wrap {
+  flex: 1; display: grid;
+  grid-template-columns: 150px 1fr 150px;
+  grid-template-rows: auto 1fr minmax(125px, auto);
+  grid-template-areas:
+    ".     north  ."
+    "west  center east"
+    "south south  south";
+  overflow: hidden; padding: 0;
+}
+
+/* Seat base */
+.b2-seat {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 6px;
+}
+.b2-seat-avatar {
+  width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+  border: 2.5px solid rgba(255,255,255,0.25); transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.b2-seat-avatar.avatar-contain { object-fit: contain; background: #1e3a28; }
+.b2-seat-name { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+.b2-seat-count {
+  font-size: 16px; font-weight: 800; color: #fff;
+  background: rgba(0,0,0,0.4); padding: 2px 12px; border-radius: 10px;
+  line-height: 1.3; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+.b2-seat.active .b2-seat-avatar { border-color: #ffd666; box-shadow: 0 0 14px rgba(255, 214, 102, 0.5); }
+.b2-seat.active .b2-seat-name { color: #ffd666; }
+.b2-seat.winner .b2-seat-avatar { border-color: #7ddb6a; box-shadow: 0 0 14px rgba(125, 219, 106, 0.5); }
+.b2-seat.winner .b2-seat-name { color: #7ddb6a; }
+
+/* Card backs for opponents — stacked to show all cards */
+.b2-seat-cards { display: flex; align-items: center; }
+.b2-mini-back {
+  width: 40px; height: 56px; border-radius: 5px;
+  background: linear-gradient(150deg, #c0392b 0%, #922020 50%, #701818 100%);
+  border: 1px solid rgba(255, 100, 80, 0.3);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  flex-shrink: 0;
+}
+
+/* North seat — cards fan out horizontally */
+.b2-north {
+  grid-area: north; flex-direction: column; padding: 2px 0 0;
+}
+.b2-north .b2-seat-cards {
+  margin-top: 2px; justify-content: center;
+}
+.b2-north .b2-mini-back { margin-left: -28px; }
+.b2-north .b2-mini-back:first-child { margin-left: 0; }
+
+/* West seat — cards stack vertically */
+.b2-west {
+  grid-area: west; padding: 6px;
+}
+.b2-west .b2-seat-cards {
+  flex-direction: column; margin-top: 4px; align-items: center;
+}
+.b2-west .b2-mini-back {
+  margin-top: -50px; margin-left: 0;
+}
+.b2-west .b2-mini-back:first-child { margin-top: 0; }
+
+/* East seat — cards stack vertically */
+.b2-east {
+  grid-area: east; padding: 6px;
+}
+.b2-east .b2-seat-cards {
+  flex-direction: column; margin-top: 4px; align-items: center;
+}
+.b2-east .b2-mini-back {
+  margin-top: -50px; margin-left: 0;
+}
+.b2-east .b2-mini-back:first-child { margin-top: 0; }
+
+/* Center: played cards + status */
+.b2-center {
+  grid-area: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px;
+}
+.b2-played {
+  display: flex; flex-direction: column; gap: 6px; justify-content: center; align-items: center;
+  min-height: 90px;
+}
+/* Played-by badge */
+.b2-played-by {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,0.4); padding: 4px 14px 4px 4px; border-radius: 20px;
+}
+.b2-played-avatar {
+  width: 26px; height: 26px; border-radius: 50%; object-fit: cover;
+  border: 1.5px solid rgba(232, 184, 74, 0.4);
+}
+.b2-played-avatar.avatar-contain { object-fit: contain; background: #1a2a1e; }
+.b2-played-name {
+  font-size: 13px; font-weight: 700; color: #e8b84a;
+}
+.b2-played-type {
+  font-size: 11px; color: rgba(232, 221, 208, 0.55); font-weight: 500;
+}
+/* Played cards row */
+.b2-played-cards {
+  display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;
+}
+.b2-played-cards .b2-card {
+  width: 68px; height: 94px;
+}
+/* Card fly-in animations from each direction */
+.b2-played-cards.from-south .b2-card { animation: b2FlyFromSouth 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.b2-played-cards.from-north .b2-card { animation: b2FlyFromNorth 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.b2-played-cards.from-west .b2-card  { animation: b2FlyFromWest 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.b2-played-cards.from-east .b2-card  { animation: b2FlyFromEast 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes b2FlyFromSouth { from { opacity:0; transform: translateY(120px) scale(0.7); } to { opacity:1; transform: translateY(0) scale(1); } }
+@keyframes b2FlyFromNorth { from { opacity:0; transform: translateY(-100px) scale(0.7); } to { opacity:1; transform: translateY(0) scale(1); } }
+@keyframes b2FlyFromWest  { from { opacity:0; transform: translateX(-140px) scale(0.7); } to { opacity:1; transform: translateX(0) scale(1); } }
+@keyframes b2FlyFromEast  { from { opacity:0; transform: translateX(140px) scale(0.7); } to { opacity:1; transform: translateX(0) scale(1); } }
+/* Pass flash */
+.b2-pass-flash {
+  animation: b2PassPulse 0.5s ease-out;
+}
+@keyframes b2PassPulse { 0% { opacity:1; } 50% { opacity:0.3; } 100% { opacity:1; } }
+.b2-played-info {
+  font-size: 12px; color: rgba(255, 255, 255, 0.5); text-align: center;
+}
+.b2-empty-table {
+  font-size: 14px; color: rgba(255, 255, 255, 0.3); font-style: italic;
+}
+.b2-status {
+  font-size: 14px; color: #ffd666; font-weight: 700;
+  text-align: center; min-height: 20px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+/* South: human hand + actions */
+.b2-south {
+  grid-area: south; display: flex; flex-direction: column; align-items: center;
+  padding: 0 16px 4px;
+  background: linear-gradient(0deg, rgba(0,0,0,0.22) 0%, transparent 100%);
+  overflow: visible;
+}
+.b2-hand {
+  display: flex; justify-content: center; align-items: flex-end;
+  flex-wrap: nowrap; padding: 0 8px; max-width: 100%;
+  margin-top: -10px;
+}
+.b2-hand-card {
+  margin-left: -14px; cursor: pointer;
+  transition: transform 0.12s;
+  flex-shrink: 0; position: relative;
+}
+.b2-hand-card:first-child { margin-left: 0; }
+.b2-hand-card .b2-card {
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.b2-hand-card:hover { transform: translateY(-10px); z-index: 2; }
+.b2-hand-card.selected {
+  transform: translateY(-16px); z-index: 3;
+}
+.b2-hand-card.selected .b2-card {
+  border-color: #e8b84a !important;
+  box-shadow: 0 0 12px rgba(232, 184, 74, 0.5);
+}
+.b2-actions {
+  display: flex; gap: 8px; justify-content: center; padding: 2px 0 0;
+}
+.b2-btn {
+  padding: 5px 24px; border-radius: 8px; font-weight: 700; font-size: 12px;
+  cursor: pointer; border: none; transition: all 0.12s;
+}
+.b2-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
+.b2-btn.primary { background: #e8b84a; color: #1a130e; }
+.b2-btn.secondary { background: rgba(141, 184, 122, 0.18); color: #8db87a; border: 1px solid rgba(141, 184, 122, 0.25); }
+.b2-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* Rules overlay */
+.b2-rules-overlay {
+  position: absolute; inset: 0; z-index: 10;
+  background: rgba(10, 8, 6, 0.93); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.b2-rules-content {
+  max-width: 480px; max-height: 80vh; overflow-y: auto;
+  color: #e8ddd0; font-size: 13px; line-height: 1.7;
+}
+.b2-rules-content h3 {
+  font-size: 18px; color: #e8b84a; margin-bottom: 14px; text-align: center;
+}
+.b2-rules-section { margin-bottom: 12px; }
+.b2-rules-section h4 {
+  font-size: 13px; color: #e8b84a; margin-bottom: 3px; font-weight: 700;
+}
+.b2-rules-section p { color: rgba(232, 221, 208, 0.75); margin: 0; }
+.b2-rules-rank {
+  font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; font-weight: 600;
+  color: #e8ddd0; letter-spacing: 0.3px;
+}
+.b2-rules-note {
+  font-size: 11px; color: rgba(232, 221, 208, 0.4); font-style: italic;
+}
+
+/* RWD Mobile */
+@media (max-width: 768px) {
+  .b2-table-wrap {
+    grid-template-columns: 80px 1fr 80px;
+  }
+  .b2-seat-avatar { width: 28px; height: 28px; }
+  .b2-seat-name { font-size: 10px; }
+  .b2-mini-back { width: 30px; height: 42px; }
+  .b2-hand-card { margin-left: -28px; }
+  .b2-hand-card .b2-card { width: 58px !important; height: 84px !important; }
+  .b2-hand-card .b2-card .b2-card-rank { font-size: 14px !important; }
+  .b2-hand-card .b2-card .b2-card-suit { font-size: 11px !important; }
+  .b2-hand-card .b2-card .b2-card-mid { font-size: 28px !important; }
+  .b2-played-cards .b2-card { width: 58px !important; height: 84px !important; }
+  .b2-played-cards .b2-card .b2-card-rank { font-size: 14px !important; }
+  .b2-played-cards .b2-card .b2-card-mid { font-size: 28px !important; }
+  .b2-btn { padding: 7px 18px; font-size: 12px; }
+  .b2-topbar { padding: 6px 10px; }
+  .b2-flavor { display: none; }
+}
+
+/* ========================================
    CASINO POPUP
    ======================================== */
 .casino-popup {
