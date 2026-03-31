@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glassmorphism Card Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0a0a0f;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    color: #fff;
+  }
+
+  /* Ambient background glow */
+  .bg-glow {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .bg-glow::before {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 30%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(100, 60, 255, 0.15), transparent 70%);
+    filter: blur(60px);
+  }
+  .bg-glow::after {
+    content: '';
+    position: absolute;
+    bottom: 10%;
+    right: 20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(60, 120, 255, 0.1), transparent 70%);
+    filter: blur(50px);
+  }
+
+  /* ========== Card Stack Scene ========== */
+  .scene {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    height: 380px;
+    perspective: 1000px;
+    z-index: 1;
+  }
+
+  .glass-card {
+    position: absolute;
+    width: 260px;
+    height: 280px;
+    border-radius: 24px;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+                opacity 0.6s ease;
+    will-change: transform;
+  }
+
+  .glass-card .card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .glass-card .card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .glass-card .card-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 36px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .glass-card .card-value .unit {
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: 2px;
+  }
+
+  .glass-card .card-stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+  .glass-card .stat-item .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .glass-card .stat-item .stat-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 2px;
+  }
+
+  /* Progress bar */
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: auto;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+    box-shadow: 0 0 12px rgba(108, 92, 231, 0.5);
+    transition: width 1s ease;
+  }
+
+  /* ---- Card positioning (3D fan) ---- */
+  /* Card 3 - far back left */
+  .glass-card:nth-child(1) {
+    top: 50px;
+    left: 0px;
+    transform: rotateY(12deg) translateZ(-120px) scale(0.88);
+    opacity: 0.45;
+    z-index: 1;
+  }
+  /* Card 2 - middle */
+  .glass-card:nth-child(2) {
+    top: 30px;
+    left: 50px;
+    transform: rotateY(6deg) translateZ(-60px) scale(0.94);
+    opacity: 0.7;
+    z-index: 2;
+  }
+  /* Card 1 - front (hero) */
+  .glass-card:nth-child(3) {
+    top: 10px;
+    left: 110px;
+    transform: rotateY(0deg) translateZ(0px) scale(1);
+    opacity: 1;
+    z-index: 3;
+  }
+
+  /* ========== Second demo: horizontal scroll cards ========== */
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 50px 0 20px;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .scroll-row {
+    display: flex;
+    gap: 16px;
+    padding: 0 24px 40px;
+    overflow-x: auto;
+    width: 100%;
+    z-index: 1;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scroll-row::-webkit-scrollbar { display: none; }
+
+  .mini-card {
+    flex: 0 0 200px;
+    height: 180px;
+    border-radius: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    scroll-snap-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .mini-card .mc-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .mini-card .mc-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .mini-card .mc-change {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .mc-change.up { color: #00e676; }
+  .mc-change.down { color: #ff5252; }
+
+  .mini-card .mc-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+  .mini-card .mc-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+  }
+  .mini-card:nth-child(1) .mc-bar-fill {
+    width: 72%;
+    background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+    box-shadow: 0 0 8px rgba(108, 92, 231, 0.4);
+  }
+  .mini-card:nth-child(2) .mc-bar-fill {
+    width: 58%;
+    background: linear-gradient(90deg, #00b894, #55efc4);
+    box-shadow: 0 0 8px rgba(0, 184, 148, 0.4);
+  }
+  .mini-card:nth-child(3) .mc-bar-fill {
+    width: 85%;
+    background: linear-gradient(90deg, #e17055, #fab1a0);
+    box-shadow: 0 0 8px rgba(225, 112, 85, 0.4);
+  }
+  .mini-card:nth-child(4) .mc-bar-fill {
+    width: 44%;
+    background: linear-gradient(90deg, #fdcb6e, #ffeaa7);
+    box-shadow: 0 0 8px rgba(253, 203, 110, 0.4);
+  }
+
+  /* ========== Interactive touch on 3D stack ========== */
+  .scene.interactive .glass-card:nth-child(3):active {
+    transform: rotateY(-2deg) translateZ(20px) scale(1.02);
+  }
+
+  /* Tap to cycle animation */
+  .hint {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    margin-top: 8px;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<p class="section-title">3D Card Stack</p>
+
+<div class="scene interactive" id="cardScene">
+  <!-- Card 3 - back -->
+  <div class="glass-card">
+    <div class="card-icon">&#9745;</div>
+    <div class="card-title">Finalized</div>
+    <div class="card-value">80<span class="unit">%</span></div>
+    <div class="card-stats">
+      <div class="stat-item">
+        <div class="stat-value">6.4k</div>
+        <div class="stat-label">Smart Rules</div>
+      </div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width: 80%"></div>
+    </div>
+  </div>
+
+  <!-- Card 2 - middle -->
+  <div class="glass-card">
+    <div class="card-icon">&#9881;</div>
+    <div class="card-title">Inspecting</div>
+    <div class="card-value">12<span class="unit">k</span></div>
+    <div class="card-stats">
+      <div class="stat-item">
+        <div class="stat-value">3.2k</div>
+        <div class="stat-label">Processed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">5</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width: 55%"></div>
+    </div>
+  </div>
+
+  <!-- Card 1 - front (hero) -->
+  <div class="glass-card">
+    <div class="card-icon">&#9881;</div>
+    <div class="card-title">Exceptions</div>
+    <div class="card-value">64,45<span class="unit">%</span></div>
+    <div class="card-stats">
+      <div class="stat-item">
+        <div class="stat-value">1.4k</div>
+        <div class="stat-label">Recognized</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">8k</div>
+        <div class="stat-label">Count</div>
+      </div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" style="width: 64%"></div>
+    </div>
+  </div>
+</div>
+
+<p class="hint">Tap cards to cycle</p>
+
+<p class="section-title">Horizontal Scroll</p>
+
+<div class="scroll-row">
+  <div class="mini-card">
+    <div class="mc-label">Crude Oil (CL)</div>
+    <div class="mc-value">$78.42</div>
+    <div class="mc-change up">+1.23%</div>
+    <div class="mc-bar"><div class="mc-bar-fill"></div></div>
+  </div>
+  <div class="mini-card">
+    <div class="mc-label">Gold (GC)</div>
+    <div class="mc-value">$2,041</div>
+    <div class="mc-change up">+0.58%</div>
+    <div class="mc-bar"><div class="mc-bar-fill"></div></div>
+  </div>
+  <div class="mini-card">
+    <div class="mc-label">Natural Gas (NG)</div>
+    <div class="mc-value">$2.89</div>
+    <div class="mc-change down">-2.15%</div>
+    <div class="mc-bar"><div class="mc-bar-fill"></div></div>
+  </div>
+  <div class="mini-card">
+    <div class="mc-label">Corn (ZC)</div>
+    <div class="mc-value">$4.52</div>
+    <div class="mc-change down">-0.34%</div>
+    <div class="mc-bar"><div class="mc-bar-fill"></div></div>
+  </div>
+</div>
+
+<script>
+  // Tap to cycle cards in the 3D stack
+  const scene = document.getElementById('cardScene');
+  const cards = Array.from(scene.querySelectorAll('.glass-card'));
+
+  const positions = [
+    { top: 50, left: 0,   ry: 12, tz: -120, scale: 0.88, opacity: 0.45, z: 1 },
+    { top: 30, left: 50,  ry: 6,  tz: -60,  scale: 0.94, opacity: 0.7,  z: 2 },
+    { top: 10, left: 110, ry: 0,  tz: 0,    scale: 1,    opacity: 1,    z: 3 },
+  ];
+
+  let order = [0, 1, 2]; // card index -> position index
+
+  function applyPositions() {
+    cards.forEach((card, i) => {
+      const p = positions[order[i]];
+      card.style.top = p.top + 'px';
+      card.style.left = p.left + 'px';
+      card.style.transform = `rotateY(${p.ry}deg) translateZ(${p.tz}px) scale(${p.scale})`;
+      card.style.opacity = p.opacity;
+      card.style.zIndex = p.z;
+    });
+  }
+
+  scene.addEventListener('click', () => {
+    // Cycle: front card goes to back
+    order = order.map(pos => (pos + 1) % 3);
+    applyPositions();
+  });
+</script>
+
+</body>
+</html>
