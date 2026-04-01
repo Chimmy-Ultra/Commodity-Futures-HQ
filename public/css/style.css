@@ -57,11 +57,55 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .sidebar-logo {
-  font-size: 15px;
-  font-weight: 800;
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 900;
   letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--accent);
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3a2010 0%, #5a3520 50%, #3a2010 100%);
+  border: 1px solid rgba(224, 160, 100, 0.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,200,140,0.15);
+  position: relative;
+  overflow: hidden;
+  color: transparent;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  -webkit-text-fill-color: unset;
+}
+.sidebar-logo::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  background: linear-gradient(135deg, #c45e28 0%, #e8955a 30%, #f0c27f 50%, #e8955a 70%, #c45e28 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: logoShimmer 4s ease-in-out infinite;
+}
+.sidebar-logo::after {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,220,160,0.12) 45%, rgba(255,220,160,0.2) 50%, rgba(255,220,160,0.12) 55%, transparent 60%);
+  animation: logoGlint 5s ease-in-out infinite;
+}
+@keyframes logoShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes logoGlint {
+  0%, 100% { transform: translateX(-80%) rotate(25deg); }
+  50% { transform: translateX(80%) rotate(25deg); }
 }
 .sidebar-subtitle {
   font-size: 11px;
@@ -531,6 +575,23 @@ body {
 .chat-header-avatar svg, .chat-header-avatar img { width: 100%; height: 100%; display: block; object-fit: cover; }
 .chat-header-name { font-size: 15px; font-weight: 700; color: var(--text); }
 .chat-header-role { font-size: 12px; color: var(--text-muted); }
+.chat-header-info { flex: 1; min-width: 0; }
+
+/* === Model Toggle === */
+.model-toggle {
+  display: flex; gap: 4px; flex-shrink: 0;
+  background: var(--bg-main); border-radius: 8px; padding: 3px;
+}
+.model-btn {
+  padding: 4px 12px; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  background: transparent; color: var(--text-muted);
+  transition: all .15s ease;
+}
+.model-btn:hover { color: var(--text); background: var(--bg-card); }
+.model-btn.active { background: var(--accent); color: #fff; }
+.model-btn.active[data-model="opus"] { background: #c46210; }
+.model-btn.active[data-model="sonnet"] { background: #1565c0; }
 
 /* === Message Avatar === */
 .msg.assistant { display: flex; gap: 10px; align-items: flex-start; }
@@ -2530,12 +2591,21 @@ body {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
 }
 .home-char-card {
+  position: relative;
   background: var(--bg-card); border-radius: var(--radius); padding: 16px;
-  text-align: center; cursor: pointer; transition: all 0.2s;
+  text-align: center; cursor: pointer;
+  transition: transform 0.15s ease-out, box-shadow 0.2s;
   box-shadow: var(--shadow-sm); border: 1px solid transparent;
   display: flex; flex-direction: column; align-items: center;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
-.home-char-card:hover { box-shadow: var(--shadow-md); border-color: var(--border); }
+.home-char-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.12); border-color: var(--border); z-index: 2; }
+.card-shine {
+  position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; z-index: 1;
+  transition: background 0.15s ease-out;
+}
 .home-char-avatar { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; margin: 0 auto 8px; }
 .home-char-avatar svg, .home-char-avatar img { width: 100%; height: 100%; display: block; object-fit: cover; border-radius: 50%; }
 .home-char-avatar img.avatar-contain,
@@ -2566,6 +2636,53 @@ body {
 .home-tool-icon { font-size: 24px; margin-bottom: 8px; }
 .home-tool-title { font-size: 15px; font-weight: 600; color: var(--text); }
 .home-tool-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* === Casino Liquid Glass Cards === */
+.casino-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg,
+    rgba(60, 40, 25, 0.85) 0%,
+    rgba(80, 50, 30, 0.75) 30%,
+    rgba(50, 35, 20, 0.80) 70%,
+    rgba(60, 40, 25, 0.85) 100%) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(224, 160, 100, 0.25) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,200,140,0.1) !important;
+  transition: transform 0.2s ease-out, box-shadow 0.2s !important;
+}
+.casino-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,200,140,0.15) !important;
+  border-color: rgba(224, 160, 100, 0.45) !important;
+}
+.casino-card .home-tool-title {
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, #e8955a 0%, #f0c27f 40%, #fce4b8 60%, #e8955a 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: logoShimmer 4s ease-in-out infinite;
+}
+.casino-card .home-tool-desc {
+  color: rgba(230, 200, 170, 0.7);
+}
+.casino-card .home-tool-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.casino-shine {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,220,160,0.08) 45%, rgba(255,220,160,0.15) 50%, rgba(255,220,160,0.08) 55%, transparent 60%);
+  animation: casinoGlint 6s ease-in-out infinite;
+}
+@keyframes casinoGlint {
+  0%, 100% { transform: translateX(-100%) rotate(25deg); }
+  50% { transform: translateX(100%) rotate(25deg); }
+}
 
 .home-reports-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
 .home-report-card {
@@ -2682,7 +2799,7 @@ body {
 .corr-legend-label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
 .corr-legend-bar {
   width: 200px; height: 12px; border-radius: 6px;
-  background: linear-gradient(to right, rgb(80,80,255), rgb(255,255,255), rgb(255,80,80));
+  background: linear-gradient(to right, rgb(80,178,80), rgb(255,255,255), rgb(255,80,80));
 }
 
 /* ===== Economic Calendar Panel ===== */

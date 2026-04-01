@@ -74,12 +74,33 @@
       var card = document.createElement('div');
       card.className = 'home-char-card';
       card.innerHTML =
+        '<div class="card-shine"></div>' +
         '<div class="home-char-avatar">' + avatarImg(c.avatar, 48, c.avatarContain) + '</div>' +
         '<div class="home-char-name">' + c.name + '</div>' +
         '<div class="home-char-role">' + c.role + '</div>' +
         (c.bio ? '<div class="home-char-bio">' + c.bio + '</div>' : '') +
         '<span class="home-char-badge ' + c.model.toLowerCase() + '">' + c.model + '</span>';
       card.addEventListener('click', function () { selectChar(c); });
+
+      // 3D tilt effect
+      card.addEventListener('mousemove', function (e) {
+        var rect = card.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        var midX = rect.width / 2;
+        var midY = rect.height / 2;
+        var rotY = ((x - midX) / midX) * 15;
+        var rotX = ((midY - y) / midY) * 15;
+        card.style.transform = 'perspective(600px) rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg) scale(1.05)';
+        var shine = card.querySelector('.card-shine');
+        if (shine) shine.style.background = 'radial-gradient(circle at ' + x + 'px ' + y + 'px, rgba(255,255,255,0.3) 0%, transparent 60%)';
+      });
+      card.addEventListener('mouseleave', function () {
+        card.style.transform = '';
+        var shine = card.querySelector('.card-shine');
+        if (shine) shine.style.background = 'transparent';
+      });
+
       grid.appendChild(card);
     });
   }

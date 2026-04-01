@@ -1,8 +1,8 @@
 // models.js — Central model mapping for all agents and characters
 // Uses Claude CLI --model flag. Adjust model strings as needed.
 
-const OPUS = 'claude-opus-4-20250514';
-const SONNET = 'claude-sonnet-4-20250514';
+const OPUS = 'claude-opus-4-6';
+const SONNET = 'claude-sonnet-4-6';
 
 const AGENT_MODELS = {
   // === Opus — deep reasoning, synthesis, independence ===
@@ -11,17 +11,17 @@ const AGENT_MODELS = {
   synthesizer: OPUS,    // Portfolio manager: weigh conflicts, kill criteria, final call
   luna:        OPUS,    // Luna: nuanced bilingual language teaching
 
-  // === Sonnet — structured data gathering, entertainment ===
+  // === Sonnet — structured data gathering ===
   wasde:      SONNET,   // Alice: WASDE data lookup
   news:       SONNET,   // Nina: news search + categorization
   cot:        SONNET,   // Vera: CFTC data table filling
   tech:       SONNET,   // Hana: technical indicator lookup
-  soft:       SONNET,   // Leo: soft commodity fundamentals
-  energy:     SONNET,   // Kai: energy & metals fundamentals
+  soft:       OPUS,     // Leo: soft commodity fundamentals
+  energy:     OPUS,     // Kai: energy & metals fundamentals
 
-  // === Entertainment ===
-  dario:      SONNET,
-  sam:        SONNET,
+  // === Celebrity ===
+  dario:      OPUS,     // Dario Amodei
+  sam:        OPUS,     // Sam Altman
   slacker:    SONNET,
 
   // === New characters ===

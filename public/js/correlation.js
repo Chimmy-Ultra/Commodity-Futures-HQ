@@ -22,11 +22,11 @@ var CorrelationManager = (function () {
       g = Math.round(255 * (1 - val));
       b = Math.round(255 * (1 - val));
     } else {
-      // white to blue
+      // white to green
       var abs = Math.abs(val);
       r = Math.round(255 * (1 - abs));
-      g = Math.round(255 * (1 - abs));
-      b = 255;
+      g = Math.round(255 * (1 - abs * 0.3));
+      b = Math.round(255 * (1 - abs));
     }
     return 'rgb(' + r + ',' + g + ',' + b + ')';
   }

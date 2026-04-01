@@ -87,10 +87,14 @@ app.get('/api/quotes/:characterId', async (req, res) => {
 
 app.post('/api/chat', rateLimit(60000, 30), async (req, res) => {
   try {
-    const { characterId, messages } = req.body;
+    const { characterId, messages, model: modelOverride } = req.body;
     if (!characterId || !messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Invalid request. Need characterId and messages[].' });
     }
+
+    // Validate model override (only allow known models)
+    var VALID_MODELS = { opus: 'claude-opus-4-6', sonnet: 'claude-sonnet-4-6' };
+    var chatModel = (modelOverride && VALID_MODELS[modelOverride]) || AGENT_MODELS[characterId];
 
     // Input validation: cap messages and content length
     if (messages.length > 50) {
@@ -115,13 +119,13 @@ app.post('/api/chat', rateLimit(60000, 30), async (req, res) => {
       systemPrompt: GLOBAL_RESPONSE_STYLE + '\n\n' + system,
       userMessage: chatPrompt,
       webSearch: true,
-      model: AGENT_MODELS[characterId],
+      model: chatModel,
     });
 
-    res.json({ response });
+    res.json({ response, model: modelOverride || 'default' });
   } catch (error) {
     console.error('Chat Error:', error.message);
-    res.status(500).json({ error: 'AI service temporarily unavailable. Please try again.' });
+    res.status(500).json({ error: 'AI Error: ' + (error.message || 'Unknown error') });
   }
 });
 

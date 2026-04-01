@@ -2,9 +2,22 @@
 
 var ChatManager = (function () {
   var STORAGE_KEY = 'commodity-hq-chat-memory-v1';
+  var MODEL_PREF_KEY = 'commodity-hq-model-pref-v1';
   var convos = {};
   var activeChar = null;
   var isLoading = false;
+  var modelPrefs = {}; // per-character model override: { charId: 'opus'|'sonnet'|'default' }
+
+  function loadModelPrefs() {
+    try {
+      var raw = localStorage.getItem(MODEL_PREF_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+  function saveModelPrefs() {
+    try { localStorage.setItem(MODEL_PREF_KEY, JSON.stringify(modelPrefs)); } catch (e) {}
+  }
+  modelPrefs = loadModelPrefs();
 
   function blankConvos() {
     var s = {};
@@ -150,10 +163,14 @@ var ChatManager = (function () {
     syncControls();
     addLoader();
 
+    var chatBody = { characterId: cid, messages: convos[cid] };
+    var pref = modelPrefs[cid];
+    if (pref && pref !== 'default') chatBody.model = pref;
+
     fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ characterId: cid, messages: convos[cid] })
+      body: JSON.stringify(chatBody)
     })
       .then(function (r) { return r.json(); })
       .then(function (d) {
@@ -202,8 +219,22 @@ var ChatManager = (function () {
     if (headerRole) headerRole.textContent = char.role;
 
     renderMessages(char.id);
+    syncModelToggle(char.id);
     QuoteManager.show(char);
     setTimeout(function () { getInputEl().focus(); }, 100);
+  }
+
+  function syncModelToggle(cid) {
+    var pref = modelPrefs[cid] || 'default';
+    document.querySelectorAll('.model-btn').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-model') === pref);
+    });
+  }
+
+  function setModelPref(cid, model) {
+    modelPrefs[cid] = model;
+    saveModelPrefs();
+    syncModelToggle(cid);
   }
 
   function getActiveChar() { return activeChar; }
@@ -220,6 +251,14 @@ var ChatManager = (function () {
     input.addEventListener('input', function () {
       input.style.height = 'auto';
       input.style.height = Math.min(input.scrollHeight, 110) + 'px';
+    });
+
+    // Model toggle buttons
+    document.querySelectorAll('.model-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (!activeChar) return;
+        setModelPref(activeChar.id, btn.getAttribute('data-model'));
+      });
     });
   });
 

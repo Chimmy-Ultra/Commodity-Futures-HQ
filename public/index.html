@@ -24,7 +24,7 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">Commodity HQ</div>
+      <div class="sidebar-logo" data-text="Commodity HQ">Commodity HQ</div>
       <div class="sidebar-subtitle">Commodity Intelligence Platform</div>
     </div>
 
@@ -125,27 +125,32 @@
             <div class="home-tool-title">Group Discussion</div>
             <div class="home-tool-desc">Multi-agent roundtable</div>
           </div>
-          <div class="home-tool-card" id="home-blackjack">
+          <div class="home-tool-card casino-card" id="home-blackjack">
+            <div class="casino-shine"></div>
             <div class="home-tool-icon">&#x1F0CF;</div>
             <div class="home-tool-title">Blackjack</div>
             <div class="home-tool-desc">21 點</div>
           </div>
-          <div class="home-tool-card" id="home-roulette">
+          <div class="home-tool-card casino-card" id="home-roulette">
+            <div class="casino-shine"></div>
             <div class="home-tool-icon">&#x1F3B0;</div>
             <div class="home-tool-title">Roulette</div>
             <div class="home-tool-desc">輪盤</div>
           </div>
-          <div class="home-tool-card" id="home-slots">
+          <div class="home-tool-card casino-card" id="home-slots">
+            <div class="casino-shine"></div>
             <div class="home-tool-icon">&#x1F352;</div>
             <div class="home-tool-title">Slots</div>
             <div class="home-tool-desc">老虎機</div>
           </div>
-          <div class="home-tool-card" id="home-poker">
+          <div class="home-tool-card casino-card" id="home-poker">
+            <div class="casino-shine"></div>
             <div class="home-tool-icon">&#x2660;&#xFE0F;</div>
             <div class="home-tool-title">Texas Hold'em</div>
             <div class="home-tool-desc">德州撲克</div>
           </div>
-          <div class="home-tool-card" id="home-bigtwo">
+          <div class="home-tool-card casino-card" id="home-bigtwo">
+            <div class="casino-shine"></div>
             <div class="home-tool-icon">&#x1F0CF;</div>
             <div class="home-tool-title">Big Two</div>
             <div class="home-tool-desc">大老二</div>
@@ -336,6 +341,11 @@
         <div class="chat-header-info">
           <div class="chat-header-name" id="chat-header-name"></div>
           <div class="chat-header-role" id="chat-header-role"></div>
+        </div>
+        <div class="model-toggle" id="model-toggle">
+          <button class="model-btn active" data-model="default" id="model-btn-default">Default</button>
+          <button class="model-btn" data-model="opus" id="model-btn-opus">Opus</button>
+          <button class="model-btn" data-model="sonnet" id="model-btn-sonnet">Sonnet</button>
         </div>
       </div>
       <div class="chat-messages" id="chat-messages"></div>
