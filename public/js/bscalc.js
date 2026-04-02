@@ -21,7 +21,7 @@ var BSCalcManager = (function () {
     { symbol: 'PA=F',      label: 'Palladium',    tick: 0.50,  decimals: 2 },
     { symbol: 'JPY=X',     label: 'USD/JPY',      tick: 0.01,  decimals: 4 },
     { symbol: 'DX-Y.NYB',  label: 'DXY Index',    tick: 0.005, decimals: 2 },
-    { symbol: '^TWII',     label: 'TAIEX 台指',   tick: 1,     decimals: 0 }
+    { symbol: '^TWII',     label: 'TAIEX 台指',   tick: 50,    decimals: 0 }
   ];
 
   var STRATEGIES = {
