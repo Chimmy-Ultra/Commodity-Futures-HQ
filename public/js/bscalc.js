@@ -4,7 +4,6 @@ var BSCalcManager = (function () {
   /* ---- state ---- */
   var model = 'european';   // 'european' | 'american'
   var optType = 'call';     // 'call' | 'put'
-  var chartTab = 'payoff';  // 'payoff' | 'greeks' | 'heatmap'
   var spotFetched = null;   // last fetched spot price
 
   var SYMBOLS = [
@@ -279,23 +278,20 @@ var BSCalcManager = (function () {
      CHART DRAWING — Canvas 2D
      ================================================================ */
   function drawChart() {
-    if (chartTab === 'payoff') drawPayoff();
-    else if (chartTab === 'greeks') drawGreeks();
-    else if (chartTab === 'heatmap') drawHeatmap();
+    drawPayoff();
+    drawGreeks();
+    drawHeatmap();
   }
 
-  function getCanvas() {
-    var c = el('bs-chart-canvas');
+  function getCanvas(canvasId) {
+    var c = el(canvasId);
     if (!c) return null;
-    // Set canvas size to container
-    var container = c.parentElement;
-    var w = container.clientWidth;
-    var h = container.clientHeight;
+    var w = c.clientWidth;
+    var h = c.clientHeight;
+    if (w <= 0 || h <= 0) return null;
     var dpr = window.devicePixelRatio || 1;
     c.width = w * dpr;
     c.height = h * dpr;
-    c.style.width = w + 'px';
-    c.style.height = h + 'px';
     var ctx = c.getContext('2d');
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, w, h);
@@ -304,7 +300,7 @@ var BSCalcManager = (function () {
 
   // --- Payoff diagram ---
   function drawPayoff() {
-    var cv = getCanvas();
+    var cv = getCanvas('bs-canvas-payoff');
     if (!cv) return;
     var ctx = cv.ctx, w = cv.w, h = cv.h;
     var p = getParams();
@@ -454,7 +450,7 @@ var BSCalcManager = (function () {
 
   // --- Greeks charts (2x2 grid) ---
   function drawGreeks() {
-    var cv = getCanvas();
+    var cv = getCanvas('bs-canvas-greeks');
     if (!cv) return;
     var ctx = cv.ctx, w = cv.w, h = cv.h;
     var p = getParams();
@@ -566,7 +562,7 @@ var BSCalcManager = (function () {
 
   // --- P&L Heatmap ---
   function drawHeatmap() {
-    var cv = getCanvas();
+    var cv = getCanvas('bs-canvas-heatmap');
     if (!cv) return;
     var ctx = cv.ctx, w = cv.w, h = cv.h;
     var p = getParams();
@@ -799,16 +795,6 @@ var BSCalcManager = (function () {
         document.querySelectorAll('.bs-type-btn').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
         calculate();
-      });
-    });
-
-    // Chart tab toggle
-    document.querySelectorAll('.bs-chart-tab').forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        chartTab = tab.dataset.tab;
-        document.querySelectorAll('.bs-chart-tab').forEach(function (t) { t.classList.remove('active'); });
-        tab.classList.add('active');
-        drawChart();
       });
     });
 

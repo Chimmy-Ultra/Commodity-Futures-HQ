@@ -406,15 +406,19 @@
         </div>
       </div>
 
-      <!-- Chart Area -->
-      <div class="bscalc-chart-area">
-        <div class="bscalc-chart-tabs">
-          <button class="bs-chart-tab active" data-tab="payoff">Payoff</button>
-          <button class="bs-chart-tab" data-tab="greeks">Greeks</button>
-          <button class="bs-chart-tab" data-tab="heatmap">P&amp;L Heatmap</button>
+      <!-- Charts Grid -->
+      <div class="bscalc-charts-grid">
+        <div class="bscalc-chart-cell">
+          <div class="bscalc-chart-title">Payoff</div>
+          <canvas id="bs-canvas-payoff"></canvas>
         </div>
-        <div class="bscalc-chart-container">
-          <canvas id="bs-chart-canvas"></canvas>
+        <div class="bscalc-chart-cell">
+          <div class="bscalc-chart-title">P&amp;L Heatmap</div>
+          <canvas id="bs-canvas-heatmap"></canvas>
+        </div>
+        <div class="bscalc-chart-cell bscalc-chart-greeks">
+          <div class="bscalc-chart-title">Greeks</div>
+          <canvas id="bs-canvas-greeks"></canvas>
         </div>
       </div>
     </div>
