@@ -3025,6 +3025,25 @@ body {
 .bscalc-chart-greeks { grid-column: 1 / -1; }
 .bscalc-chart-greeks canvas { width: 500px; height: 500px; }
 
+/* Legs table */
+.bscalc-legs-container { padding: 0 20px 8px; }
+.bscalc-legs-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.bscalc-legs-table th {
+  text-align: left; padding: 4px 6px; color: var(--text-muted);
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; border-bottom: 1px solid var(--border);
+}
+.bscalc-legs-table td { padding: 4px 6px; border-bottom: 1px solid rgba(150,150,150,0.08); }
+.bscalc-legs-table select { font-size: 12px; padding: 3px 6px; }
+.bs-leg-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 700;
+}
+.bs-leg-long { background: rgba(78,205,196,0.15); color: #4ecdc4; }
+.bs-leg-short { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+.bs-leg-call { background: rgba(78,205,196,0.1); color: #4ecdc4; }
+.bs-leg-put { background: rgba(255,107,107,0.1); color: #ff6b6b; }
+
 /* Responsive */
 @media (max-width: 600px) {
   .bscalc-result-top { flex-direction: column; gap: 8px; }

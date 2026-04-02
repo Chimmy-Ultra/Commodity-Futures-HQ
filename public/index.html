@@ -330,7 +330,7 @@
       <div class="bscalc-result">
         <div class="bscalc-result-top">
           <div class="bscalc-price-block">
-            <div class="bscalc-price-label">Theoretical Price</div>
+            <div class="bscalc-price-label" id="bs-price-label">Theoretical Price</div>
             <div class="bscalc-price-val" id="bs-price-val">0.0000</div>
           </div>
           <div class="bscalc-dist-block">
@@ -362,11 +362,8 @@
           </div>
         </div>
         <div class="bscalc-row">
-          <span class="bscalc-input-label">Type</span>
-          <div class="bscalc-toggle-group">
-            <button class="bs-type-btn active" data-type="call">Call</button>
-            <button class="bs-type-btn" data-type="put">Put</button>
-          </div>
+          <span class="bscalc-input-label">Strategy</span>
+          <select id="bs-strategy" class="bscalc-select"></select>
         </div>
         <div class="bscalc-row">
           <span class="bscalc-input-label">Symbol</span>
@@ -379,10 +376,7 @@
             <button class="bscalc-fetch-btn" id="bs-fetch-spot">Fetch</button>
           </div>
         </div>
-        <div class="bscalc-row">
-          <span class="bscalc-input-label">Strike Price</span>
-          <select id="bs-strike" class="bscalc-select"></select>
-        </div>
+        <div id="bs-legs-container" class="bscalc-legs-container"></div>
         <div class="bscalc-row">
           <span class="bscalc-input-label">Expiry Date</span>
           <div class="bscalc-expiry-group">
