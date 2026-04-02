@@ -3022,6 +3022,7 @@ body {
   text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; padding-left: 4px;
 }
 .bscalc-chart-cell canvas { width: 250px; height: 250px; display: block; }
+#bs-canvas-heatmap { width: 310px; height: 250px; }
 .bscalc-chart-greeks { grid-column: 1 / -1; }
 .bscalc-chart-greeks canvas { width: 1000px; height: 250px; }
 

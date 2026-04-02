@@ -8,20 +8,20 @@ var BSCalcManager = (function () {
   var spotFetched = null;
 
   var SYMBOLS = [
-    { symbol: 'GC=F', label: 'Gold', tick: 10 },
-    { symbol: 'SI=F', label: 'Silver', tick: 0.5 },
-    { symbol: 'CL=F', label: 'WTI Crude', tick: 1 },
-    { symbol: 'NG=F', label: 'Natural Gas', tick: 0.05 },
-    { symbol: 'ZC=F', label: 'Corn', tick: 5 },
-    { symbol: 'ZS=F', label: 'Soybeans', tick: 10 },
-    { symbol: 'ZW=F', label: 'Wheat', tick: 5 },
-    { symbol: 'KC=F', label: 'Coffee', tick: 5 },
-    { symbol: 'SB=F', label: 'Sugar', tick: 0.25 },
-    { symbol: 'CT=F', label: 'Cotton', tick: 1 },
-    { symbol: 'PA=F', label: 'Palladium', tick: 10 },
-    { symbol: 'JPY=X', label: 'USD/JPY', tick: 0.5 },
-    { symbol: 'DX-Y.NYB', label: 'DXY Index', tick: 0.5 },
-    { symbol: '^TWII', label: 'TAIEX 台指', tick: 50 }
+    { symbol: 'GC=F',      label: 'Gold',        tick: 0.10,  decimals: 2 },
+    { symbol: 'SI=F',      label: 'Silver',       tick: 0.005, decimals: 2 },
+    { symbol: 'CL=F',      label: 'WTI Crude',    tick: 0.01,  decimals: 2 },
+    { symbol: 'NG=F',      label: 'Natural Gas',  tick: 0.001, decimals: 4 },
+    { symbol: 'ZC=F',      label: 'Corn',         tick: 0.25,  decimals: 2 },
+    { symbol: 'ZS=F',      label: 'Soybeans',     tick: 0.25,  decimals: 2 },
+    { symbol: 'ZW=F',      label: 'Wheat',        tick: 0.25,  decimals: 2 },
+    { symbol: 'KC=F',      label: 'Coffee',       tick: 0.05,  decimals: 2 },
+    { symbol: 'SB=F',      label: 'Sugar',        tick: 0.01,  decimals: 2 },
+    { symbol: 'CT=F',      label: 'Cotton',       tick: 0.01,  decimals: 2 },
+    { symbol: 'PA=F',      label: 'Palladium',    tick: 0.50,  decimals: 2 },
+    { symbol: 'JPY=X',     label: 'USD/JPY',      tick: 0.01,  decimals: 4 },
+    { symbol: 'DX-Y.NYB',  label: 'DXY Index',    tick: 0.005, decimals: 2 },
+    { symbol: '^TWII',     label: 'TAIEX 台指',   tick: 1,     decimals: 0 }
   ];
 
   var STRATEGIES = {
@@ -345,7 +345,9 @@ var BSCalcManager = (function () {
       if (arr.length > 0) {
         var last = arr[arr.length - 1];
         spotFetched = last.close;
-        el('bs-spot').value = spotFetched.toFixed(2);
+        var symInfo = SYMBOLS.find(function(s){ return s.symbol === sym; });
+        var decimals = symInfo ? symInfo.decimals : 2;
+        el('bs-spot').value = spotFetched.toFixed(decimals);
         applyStrategy();
       }
     } catch (e) { /* silently fail */ }
@@ -397,7 +399,7 @@ var BSCalcManager = (function () {
     if (kMin === Infinity) { kMin = p.S; kMax = p.S; }
     var mid = (kMin + kMax) / 2;
     var spread = kMax - kMin;
-    var stdMove = p.S * p.sigma * Math.sqrt(Math.max(p.T, 1 / 365)) * 2.5;
+    var stdMove = p.S * p.sigma * Math.sqrt(Math.max(p.T, 1 / 365)) * 1.0;
     var range = Math.max(stdMove, spread * 2);
     return { xMin: Math.max(mid - range, mid * 0.3), xMax: mid + range };
   }
@@ -469,10 +471,10 @@ var BSCalcManager = (function () {
     ctx.setLineDash([]);
 
     // Axis labels
-    ctx.fillStyle = '#999'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'center';
-    for (var i = 0; i <= 3; i++) { var v = xMin + (xMax - xMin) * i / 3; ctx.fillText(v.toFixed(0), toX(v), h - pad.bottom + 16); }
+    ctx.fillStyle = '#999'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'center';
+    for (var i = 0; i <= 3; i++) { var v = xMin + (xMax - xMin) * i / 3; ctx.fillText(v.toFixed(0), toX(v), h - pad.bottom + 14); }
     ctx.textAlign = 'right';
-    for (var i = 0; i <= 4; i++) { var v = yMin + (yMax - yMin) * i / 4; ctx.fillText(v.toFixed(1), pad.left - 8, toY(v) + 4); }
+    for (var i = 0; i <= 4; i++) { var v = yMin + (yMax - yMin) * i / 4; ctx.fillText(v.toFixed(1), pad.left - 6, toY(v) + 3); }
 
     // Payoff at expiry
     ctx.strokeStyle = 'rgba(255,107,107,0.8)'; ctx.lineWidth = 2;

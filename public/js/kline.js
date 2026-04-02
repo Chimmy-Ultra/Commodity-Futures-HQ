@@ -24,6 +24,7 @@ var KlineManager = (function () {
     { value: 'PA=F', label: 'Palladium (PA)' },
     { value: 'JPY=X', label: 'USD/JPY' },
     { value: 'DX-Y.NYB', label: 'DXY Index' },
+    { value: '^TWII', label: 'TAIEX 台指' },
   ];
 
   var INTERVALS = [
