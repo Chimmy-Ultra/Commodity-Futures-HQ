@@ -412,7 +412,7 @@ var BSCalcManager = (function () {
     function toY(v) { return pad.top + (1 - (v - yMin) / (yMax - yMin)) * ph; }
 
     // Grid
-    drawGrid(ctx, pad, w, h, xMin, xMax, yMin, yMax, 5, 5);
+    drawGrid(ctx, pad, w, h, xMin, xMax, yMin, yMax, 3, 4);
     // Zero line
     if (yMin < 0 && yMax > 0) {
       ctx.strokeStyle = 'rgba(150,150,150,0.4)';
@@ -435,14 +435,14 @@ var BSCalcManager = (function () {
     ctx.font = '11px Inter, sans-serif';
     ctx.textAlign = 'center';
     // X axis labels
-    var xTicks = 5;
+    var xTicks = 3;
     for (var i = 0; i <= xTicks; i++) {
       var v = xMin + (xMax - xMin) * i / xTicks;
       ctx.fillText(v.toFixed(0), toX(v), h - pad.bottom + 16);
     }
     // Y axis labels
     ctx.textAlign = 'right';
-    var yTicks = 5;
+    var yTicks = 4;
     for (var i = 0; i <= yTicks; i++) {
       var v = yMin + (yMax - yMin) * i / yTicks;
       ctx.fillText(v.toFixed(1), pad.left - 8, toY(v) + 4);
@@ -592,18 +592,19 @@ var BSCalcManager = (function () {
 
       // Y axis labels
       ctx.fillStyle = '#888';
-      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.font = '9px JetBrains Mono, monospace';
       ctx.textAlign = 'right';
-      for (var ti = 0; ti <= 3; ti++) {
-        var v2 = yMin2 + (yMax2 - yMin2) * ti / 3;
-        ctx.fillText(v2.toFixed(4), ox + pad.left - 4, toY2(v2) + 3);
+      for (var ti = 0; ti <= 2; ti++) {
+        var v2 = yMin2 + (yMax2 - yMin2) * ti / 2;
+        ctx.fillText(v2.toFixed(3), ox + pad.left - 4, toY2(v2) + 3);
       }
 
       // X axis labels
       ctx.textAlign = 'center';
-      for (var ti = 0; ti <= 3; ti++) {
-        var v3 = xMin + (xMax - xMin) * ti / 3;
-        ctx.fillText(v3.toFixed(0), toX2(v3), oy + cellH - pad.bottom + 14);
+      ctx.font = '9px JetBrains Mono, monospace';
+      for (var ti = 0; ti <= 2; ti++) {
+        var v3 = xMin + (xMax - xMin) * ti / 2;
+        ctx.fillText(v3.toFixed(0), toX2(v3), oy + cellH - pad.bottom + 12);
       }
 
       // Draw line
@@ -689,22 +690,22 @@ var BSCalcManager = (function () {
     }
 
     // Grid overlay on heatmap
-    drawGrid(ctx, pad, w, h, xMin3, xMax3, yMin3, yMax3, 5, 5);
+    drawGrid(ctx, pad, w, h, xMin3, xMax3, yMin3, yMax3, 3, 3);
 
     // Axes labels
     ctx.fillStyle = '#999';
-    ctx.font = '11px Inter, sans-serif';
+    ctx.font = '10px Inter, sans-serif';
     ctx.textAlign = 'center';
-    var xTicks3 = 5;
+    var xTicks3 = 3;
     for (var i = 0; i <= xTicks3; i++) {
       var v = xMin3 + (xMax3 - xMin3) * i / xTicks3;
-      ctx.fillText(v.toFixed(0), pad.left + i * pw3 / xTicks3, h - pad.bottom + 16);
+      ctx.fillText(v.toFixed(0), pad.left + i * pw3 / xTicks3, h - pad.bottom + 14);
     }
     ctx.textAlign = 'right';
-    var yTicks3 = 5;
+    var yTicks3 = 3;
     for (var i = 0; i <= yTicks3; i++) {
       var vol = yMin3 + (yMax3 - yMin3) * i / yTicks3;
-      ctx.fillText((vol * 100).toFixed(0) + '%', pad.left - 8, pad.top + (1 - i / yTicks3) * ph3 + 4);
+      ctx.fillText((vol * 100).toFixed(0) + '%', pad.left - 6, pad.top + (1 - i / yTicks3) * ph3 + 4);
     }
 
     // Current position marker
