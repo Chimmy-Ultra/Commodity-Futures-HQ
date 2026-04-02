@@ -3023,7 +3023,7 @@ body {
 }
 .bscalc-chart-cell canvas { width: 250px; height: 250px; display: block; }
 .bscalc-chart-greeks { grid-column: 1 / -1; }
-.bscalc-chart-greeks canvas { width: 500px; height: 500px; }
+.bscalc-chart-greeks canvas { width: 1000px; height: 250px; }
 
 /* Legs table */
 .bscalc-legs-container { padding: 0 20px 8px; }

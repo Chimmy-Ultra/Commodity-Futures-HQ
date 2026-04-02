@@ -21,7 +21,7 @@ var BSCalcManager = (function () {
     { symbol: 'PA=F', label: 'Palladium', tick: 10 },
     { symbol: 'JPY=X', label: 'USD/JPY', tick: 0.5 },
     { symbol: 'DX-Y.NYB', label: 'DXY Index', tick: 0.5 },
-    { symbol: 'IX0126.TW', label: 'TAIEX 台指', tick: 50 }
+    { symbol: '^TWII', label: 'TAIEX 台指', tick: 50 }
   ];
 
   var STRATEGIES = {
@@ -518,7 +518,7 @@ var BSCalcManager = (function () {
 
     var greekList = ['delta', 'gamma', 'vega', 'theta'];
     var colors = ['#4ecdc4', '#ff6b6b', '#ffd93d', '#a78bfa'];
-    var cols = 2, rows = 2;
+    var cols = 4, rows = 1;
     var cellW = w / cols, cellH = h / rows;
     var pad = { top: 28, right: 14, bottom: 28, left: 50 };
     var xr = getXRange(p);
@@ -528,7 +528,7 @@ var BSCalcManager = (function () {
 
     for (var gi = 0; gi < greekList.length; gi++) {
       var gname = greekList[gi];
-      var col = gi % cols, row = Math.floor(gi / cols);
+      var col = gi % cols, row = 0;
       var ox = col * cellW, oy = row * cellH;
       var pw2 = cellW - pad.left - pad.right, ph2 = cellH - pad.top - pad.bottom;
 
