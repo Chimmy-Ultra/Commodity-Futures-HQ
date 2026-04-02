@@ -80,15 +80,12 @@ var BSCalcManager = (function () {
     var spot = parseFloat(el('bs-spot').value) || 100;
     var atm = Math.round(spot / tick) * tick;
 
-    var html = '<table class="bscalc-legs-table"><thead><tr>' +
-      '<th>Leg</th><th>Type</th><th>Dir</th><th>Qty</th><th>Strike</th>' +
-      '</tr></thead><tbody>';
-
+    var html = '';
     for (var i = 0; i < legs.length; i++) {
       var leg = legs[i];
       var typeCls = leg.type === 'call' ? 'bs-leg-call' : 'bs-leg-put';
       var dirCls = leg.dir > 0 ? 'bs-leg-long' : 'bs-leg-short';
-      var dirLabel = leg.dir > 0 ? 'Long' : 'Short';
+      var dirLabel = leg.dir > 0 ? '\u25B2 Long' : '\u25BC Short';
 
       // Build strike options
       var opts = '';
@@ -101,20 +98,24 @@ var BSCalcManager = (function () {
         opts += '<option value="' + k + '"' + sel2 + '>' + label + '</option>';
       }
 
-      html += '<tr>' +
-        '<td>' + (i + 1) + '</td>' +
-        '<td><span class="bs-leg-badge ' + typeCls + '">' + leg.type.toUpperCase() + '</span></td>' +
-        '<td><span class="bs-leg-badge ' + dirCls + '">' + dirLabel + '</span></td>' +
-        '<td>' + leg.qty + '</td>' +
-        '<td><select class="bscalc-select bs-leg-strike" data-leg="' + i + '">' + opts + '</select></td>' +
-        '</tr>';
+      html += '<div class="bs-leg-card">' +
+        '<div class="bs-leg-header">' +
+          '<span class="bs-leg-num">#' + (i + 1) + '</span>' +
+          '<span class="bs-leg-badge ' + typeCls + '">' + leg.type.toUpperCase() + '</span>' +
+          '<span class="bs-leg-badge ' + dirCls + '">' + dirLabel + '</span>' +
+          '<span class="bs-leg-qty">\u00D7' + leg.qty + '</span>' +
+        '</div>' +
+        '<div class="bs-leg-strike-row">' +
+          '<span class="bs-leg-strike-label">Strike</span>' +
+          '<select class="bscalc-select bs-leg-strike" data-leg="' + i + '">' + opts + '</select>' +
+        '</div>' +
+      '</div>';
     }
 
     if (STRATEGIES[strategy].hasUnderlying) {
-      html += '<tr><td>+</td><td colspan="4" style="color:var(--text-muted);font-size:12px">Long Underlying</td></tr>';
+      html += '<div class="bs-leg-underlying">+ Long Underlying</div>';
     }
 
-    html += '</tbody></table>';
     container.innerHTML = html;
 
     // Attach strike change listeners
@@ -302,17 +303,31 @@ var BSCalcManager = (function () {
     el('bs-price-label').textContent = isMulti ? 'Net Premium' : 'Theoretical Price';
     el('bs-price-val').textContent = res.price.toFixed(4);
 
+    // Update header subtitle
+    var subtitleEl = el('bs-strategy-label');
+    if (subtitleEl) subtitleEl.textContent = STRATEGIES[strategy].label;
+
+    // Price card border color
+    var priceCard = document.getElementById('bs-price-card');
+    if (priceCard) priceCard.style.borderLeftColor = res.price > 0 ? '#4ecdc4' : res.price < 0 ? '#ff6b6b' : 'var(--accent)';
+
     // Moneyness / strategy label
+    var distEl = el('bs-dist-val');
+    var distCard = document.getElementById('bs-dist-card');
     if (isMulti) {
-      el('bs-dist-val').textContent = STRATEGIES[strategy].label;
-      el('bs-dist-val').className = 'bs-dist-value';
+      distEl.textContent = STRATEGIES[strategy].label;
+      distEl.className = 'bscalc-result-card-sub';
+      if (distCard) distCard.style.borderLeftColor = 'var(--border)';
       el('bs-moneyness').textContent = legs.length + ' legs';
     } else if (legs.length === 1) {
       var K = legs[0].K;
       var pct = params.S > 0 ? ((K - params.S) / params.S * 100) : 0;
       var sign = pct >= 0 ? '+' : '';
-      el('bs-dist-val').textContent = sign + pct.toFixed(2) + '%';
-      el('bs-dist-val').className = 'bs-dist-value ' + (pct > 0 ? 'otm' : pct < 0 ? 'itm' : '');
+      distEl.textContent = sign + pct.toFixed(2) + '%';
+      var isItm = pct < 0;
+      var isOtm = pct > 0;
+      distEl.className = 'bscalc-result-card-sub ' + (isOtm ? 'otm' : isItm ? 'itm' : '');
+      if (distCard) distCard.style.borderLeftColor = isItm ? '#4ecdc4' : isOtm ? '#ff6b6b' : 'var(--border)';
       var type = legs[0].type;
       var moneyLabel = '';
       if (type === 'call') moneyLabel = K < params.S ? 'ITM' : K > params.S ? 'OTM' : 'ATM';

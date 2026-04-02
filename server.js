@@ -7,7 +7,7 @@ const { fetchYahooQuotes, getCachedQuotes, setCachedQuotes, fetchYahooKline } = 
 const { queryDatabento } = require('./lib/databento');
 const { COMMODITY_LABELS } = require('./config/commodities');
 const { runAnalysis } = require('./lib/orchestrator');
-const { callClaude, formatChatHistory } = require('./lib/claude-runner');
+const { callClaude, streamClaude, formatChatHistory } = require('./lib/claude-runner');
 const { AGENT_MODELS } = require('./config/models');
 const { getCorrelationMatrix } = require('./lib/correlation');
 const { CALENDAR_EVENTS, CALENDAR_PROMPT } = require('./config/calendar');
@@ -127,6 +127,57 @@ app.post('/api/chat', rateLimit(60000, 30), async (req, res) => {
     console.error('Chat Error:', error.message);
     res.status(500).json({ error: 'AI Error: ' + (error.message || 'Unknown error') });
   }
+});
+
+// --- Chat streaming (SSE) ---
+
+app.post('/api/chat/stream', rateLimit(60000, 30), (req, res) => {
+  const { characterId, messages, model: modelOverride } = req.body;
+  if (!characterId || !messages || !Array.isArray(messages)) {
+    return res.status(400).json({ error: 'Invalid request.' });
+  }
+
+  var VALID_MODELS = { opus: 'claude-opus-4-6', sonnet: 'claude-sonnet-4-6' };
+  var chatModel = (modelOverride && VALID_MODELS[modelOverride]) || AGENT_MODELS[characterId];
+
+  if (messages.length > 50) return res.status(400).json({ error: 'Too many messages.' });
+  for (var i = 0; i < messages.length; i++) {
+    if (typeof messages[i].content === 'string' && messages[i].content.length > 8000) {
+      return res.status(400).json({ error: 'Message too long.' });
+    }
+  }
+
+  const system = PROMPTS[characterId];
+  if (!system) return res.status(400).json({ error: 'Unknown character: ' + characterId });
+
+  var chatPrompt = formatChatHistory(messages);
+  chatPrompt += '\n\nRespond as the assistant to the user\'s latest message above.';
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  var streamDone = false;
+  var proc = streamClaude({
+    systemPrompt: GLOBAL_RESPONSE_STYLE + '\n\n' + system,
+    userMessage: chatPrompt,
+    webSearch: true,
+    model: chatModel,
+    onChunk: function (delta) {
+      if (!res.writableEnded) res.write('data: ' + JSON.stringify({ delta: delta }) + '\n\n');
+    },
+    onDone: function (fullText) {
+      streamDone = true;
+      if (!res.writableEnded) { res.write('data: ' + JSON.stringify({ done: true, full: fullText }) + '\n\n'); res.end(); }
+    },
+    onError: function (err) {
+      streamDone = true;
+      if (!res.writableEnded) { res.write('data: ' + JSON.stringify({ error: err.message }) + '\n\n'); res.end(); }
+    },
+  });
+
+  // Note: no req.on('close') kill — POST request body close fires immediately after body is read
 });
 
 // --- Commodities list ---

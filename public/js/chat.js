@@ -147,6 +147,21 @@ var ChatManager = (function () {
     if (e) e.remove();
   }
 
+  function addStreamingBubble() {
+    var el = getMsgsEl();
+    var d = document.createElement('div');
+    d.className = 'msg assistant';
+    d.id = 'chat-stream-bubble';
+    var avatarHtml = activeChar && activeChar.avatar
+      ? '<img src="' + activeChar.avatar + '" alt=""' + (activeChar.avatarContain ? ' class="avatar-contain"' : '') + ' width="28" height="28">'
+      : '';
+    d.innerHTML = '<div class="msg-avatar">' + avatarHtml + '</div>'
+      + '<div class="msg-content"><span class="thinking-label">Thinking...</span></div>';
+    el.appendChild(d);
+    el.scrollTop = el.scrollHeight;
+    return d;
+  }
+
   function send() {
     if (isLoading || !activeChar) return;
     var input = getInputEl();
@@ -161,33 +176,64 @@ var ChatManager = (function () {
     renderMessages(cid);
     isLoading = true;
     syncControls();
-    addLoader();
+
+    var bubble = addStreamingBubble();
+    var contentEl = bubble.querySelector('.msg-content');
+    var accumulated = '';
+    var started = false;
 
     var chatBody = { characterId: cid, messages: convos[cid] };
     var pref = modelPrefs[cid];
     if (pref && pref !== 'default') chatBody.model = pref;
 
-    fetch('/api/chat', {
+    function finish(fullText, isError) {
+      var finalContent = isError ? fullText : (fullText || accumulated);
+      convos[cid].push({ role: 'assistant', content: finalContent });
+      save();
+      isLoading = false;
+      if (activeChar && activeChar.id === cid) renderMessages(cid);
+      syncControls();
+      if (activeChar && activeChar.id === cid) getInputEl().focus();
+    }
+
+    fetch('/api/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(chatBody)
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        convos[cid].push({ role: 'assistant', content: d.error ? 'Error: ' + d.error : d.response });
-        save();
-      })
-      .catch(function (err) {
-        convos[cid].push({ role: 'assistant', content: 'Error: ' + err.message });
-        save();
-      })
-      .finally(function () {
-        removeLoader();
-        isLoading = false;
-        if (activeChar && activeChar.id === cid) renderMessages(cid);
-        syncControls();
-        if (activeChar && activeChar.id === cid) getInputEl().focus();
-      });
+    }).then(function (res) {
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder();
+      var sseBuffer = '';
+
+      function pump() {
+        return reader.read().then(function (result) {
+          if (result.done) { finish(accumulated, false); return; }
+          sseBuffer += decoder.decode(result.value, { stream: true });
+          var lines = sseBuffer.split('\n');
+          sseBuffer = lines.pop();
+
+          for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            if (!line.startsWith('data: ')) continue;
+            try {
+              var data = JSON.parse(line.slice(6));
+              if (data.error) { finish('Error: ' + data.error, true); return; }
+              if (data.delta) {
+                if (!started) { contentEl.innerHTML = ''; started = true; }
+                accumulated += data.delta;
+                contentEl.innerHTML = md(accumulated);
+                getMsgsEl().scrollTop = getMsgsEl().scrollHeight;
+              }
+              if (data.done) { finish(data.full || accumulated, false); return; }
+            } catch (e) { /* skip */ }
+          }
+          return pump();
+        });
+      }
+      return pump();
+    }).catch(function (err) {
+      finish('Error: ' + err.message, true);
+    });
   }
 
   function clearConversation() {

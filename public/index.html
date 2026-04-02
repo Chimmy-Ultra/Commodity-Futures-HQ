@@ -321,96 +321,115 @@
 
     <!-- BS Options Calculator Panel -->
     <div class="bscalc-panel" id="bscalc-panel">
+      <!-- Header -->
       <div class="bscalc-header">
-        <div style="font-weight:700;font-size:16px;color:var(--text)">&#x1F4D0; Options Calculator</div>
-        <button class="btn-icon" id="bscalc-close" title="Close">&#x2715;</button>
-      </div>
-
-      <!-- Result Area -->
-      <div class="bscalc-result">
-        <div class="bscalc-result-top">
-          <div class="bscalc-price-block">
-            <div class="bscalc-price-label" id="bs-price-label">Theoretical Price</div>
-            <div class="bscalc-price-val" id="bs-price-val">0.0000</div>
-          </div>
-          <div class="bscalc-dist-block">
-            <div class="bscalc-price-label">Strike vs Spot</div>
-            <div class="bs-dist-value" id="bs-dist-val">0.00%</div>
-            <div class="bscalc-moneyness" id="bs-moneyness">ATM</div>
-          </div>
-          <div class="bscalc-dte-block">
-            <div class="bscalc-price-label">Days to Expiry</div>
-            <div class="bscalc-dte-val" id="bs-dte">30 days</div>
-          </div>
+        <div class="bscalc-header-left">
+          <div class="bscalc-title">Options Calculator</div>
+          <div class="bscalc-subtitle" id="bs-strategy-label">Call</div>
         </div>
-        <div class="bscalc-greeks">
-          <div class="bscalc-greek"><span class="greek-label">Delta</span><span class="greek-val" id="bs-delta">0.0000</span></div>
-          <div class="bscalc-greek"><span class="greek-label">Gamma</span><span class="greek-val" id="bs-gamma">0.0000</span></div>
-          <div class="bscalc-greek"><span class="greek-label">Vega</span><span class="greek-val" id="bs-vega">0.0000</span></div>
-          <div class="bscalc-greek"><span class="greek-label">Theta</span><span class="greek-val" id="bs-theta">0.0000</span></div>
-          <div class="bscalc-greek"><span class="greek-label">Rho</span><span class="greek-val" id="bs-rho">0.0000</span></div>
-        </div>
-      </div>
-
-      <!-- Input Area -->
-      <div class="bscalc-inputs">
-        <div class="bscalc-row">
-          <span class="bscalc-input-label">Model</span>
+        <div class="bscalc-header-right">
           <div class="bscalc-toggle-group">
             <button class="bs-model-btn" data-model="american">American</button>
             <button class="bs-model-btn active" data-model="european">European</button>
           </div>
+          <button class="btn-icon" id="bscalc-close" title="Close">&#x2715;</button>
         </div>
-        <div class="bscalc-row">
-          <span class="bscalc-input-label">Strategy</span>
-          <select id="bs-strategy" class="bscalc-select"></select>
+      </div>
+
+      <!-- Results Banner — 3 cards -->
+      <div class="bscalc-results-banner">
+        <div class="bscalc-result-card bscalc-result-price" id="bs-price-card">
+          <div class="bscalc-result-card-label" id="bs-price-label">Theoretical Price</div>
+          <div class="bscalc-result-card-value" id="bs-price-val">0.0000</div>
         </div>
-        <div class="bscalc-row">
-          <span class="bscalc-input-label">Symbol</span>
-          <select id="bs-symbol" class="bscalc-select"></select>
+        <div class="bscalc-result-card" id="bs-dist-card">
+          <div class="bscalc-result-card-label">Strike vs Spot</div>
+          <div class="bscalc-result-card-sub" id="bs-dist-val">0.00%</div>
+          <div class="bscalc-moneyness" id="bs-moneyness">ATM</div>
         </div>
-        <div class="bscalc-row">
-          <span class="bscalc-input-label">Spot Price</span>
-          <div class="bscalc-input-with-btn">
-            <input type="number" id="bs-spot" class="bscalc-input" value="100" step="0.01">
-            <button class="bscalc-fetch-btn" id="bs-fetch-spot">Fetch</button>
+        <div class="bscalc-result-card">
+          <div class="bscalc-result-card-label">Days to Expiry</div>
+          <div class="bscalc-dte-val" id="bs-dte">30 days</div>
+        </div>
+      </div>
+
+      <!-- Greeks Strip — 5 color-topped cards -->
+      <div class="bscalc-greeks-strip">
+        <div class="bscalc-greek-card greek-delta"><span class="greek-label">Delta</span><span class="greek-val" id="bs-delta">0.0000</span></div>
+        <div class="bscalc-greek-card greek-gamma"><span class="greek-label">Gamma</span><span class="greek-val" id="bs-gamma">0.0000</span></div>
+        <div class="bscalc-greek-card greek-vega"><span class="greek-label">Vega</span><span class="greek-val" id="bs-vega">0.0000</span></div>
+        <div class="bscalc-greek-card greek-theta"><span class="greek-label">Theta</span><span class="greek-val" id="bs-theta">0.0000</span></div>
+        <div class="bscalc-greek-card greek-rho"><span class="greek-label">Rho</span><span class="greek-val" id="bs-rho">0.0000</span></div>
+      </div>
+
+      <!-- Two-column body: inputs | charts -->
+      <div class="bscalc-body">
+        <div class="bscalc-inputs-col">
+          <!-- Strategy section -->
+          <div class="bscalc-input-section">
+            <div class="bscalc-section-title">Strategy</div>
+            <div class="bscalc-row">
+              <span class="bscalc-input-label">Strategy</span>
+              <select id="bs-strategy" class="bscalc-select"></select>
+            </div>
+            <div class="bscalc-row">
+              <span class="bscalc-input-label">Symbol</span>
+              <select id="bs-symbol" class="bscalc-select"></select>
+            </div>
+            <div id="bs-legs-container" class="bscalc-legs-container"></div>
+          </div>
+          <!-- Market Data section -->
+          <div class="bscalc-input-section">
+            <div class="bscalc-section-title">Market Data</div>
+            <div class="bscalc-row">
+              <span class="bscalc-input-label">Spot Price</span>
+              <div class="bscalc-input-with-btn">
+                <input type="number" id="bs-spot" class="bscalc-input" value="100" step="0.01">
+                <button class="bscalc-fetch-btn" id="bs-fetch-spot">Fetch</button>
+              </div>
+            </div>
+            <div class="bscalc-row bscalc-row-expiry">
+              <span class="bscalc-input-label">Expiry</span>
+              <div class="bscalc-expiry-group">
+                <input type="date" id="bs-expiry" class="bscalc-input">
+                <input type="range" id="bs-expiry-slider" class="bscalc-slider" min="1" max="365" value="30">
+              </div>
+            </div>
+          </div>
+          <!-- Model Parameters section -->
+          <div class="bscalc-input-section">
+            <div class="bscalc-section-title">Model Parameters</div>
+            <div class="bscalc-row">
+              <span class="bscalc-input-label">Volatility</span>
+              <div class="bscalc-input-suffix">
+                <input type="number" id="bs-vol" class="bscalc-input" value="20" step="0.1">
+                <span class="bscalc-suffix">%</span>
+              </div>
+            </div>
+            <div class="bscalc-row">
+              <span class="bscalc-input-label">Risk-free Rate</span>
+              <div class="bscalc-input-suffix">
+                <input type="number" id="bs-rate" class="bscalc-input" value="5" step="0.01">
+                <span class="bscalc-suffix">%</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div id="bs-legs-container" class="bscalc-legs-container"></div>
-        <div class="bscalc-row">
-          <span class="bscalc-input-label">Expiry Date</span>
-          <div class="bscalc-expiry-group">
-            <input type="date" id="bs-expiry" class="bscalc-input">
-            <input type="range" id="bs-expiry-slider" class="bscalc-slider" min="1" max="365" value="30">
+        <div class="bscalc-charts-col">
+          <div class="bscalc-chart-cell">
+            <div class="bscalc-chart-title">Payoff</div>
+            <canvas id="bs-canvas-payoff"></canvas>
           </div>
-        </div>
-        <div class="bscalc-row">
-          <span class="bscalc-input-label">Volatility</span>
-          <div class="bscalc-input-suffix">
-            <input type="number" id="bs-vol" class="bscalc-input" value="20" step="0.1">
-            <span class="bscalc-suffix">%</span>
-          </div>
-        </div>
-        <div class="bscalc-row">
-          <span class="bscalc-input-label">Risk-free Rate</span>
-          <div class="bscalc-input-suffix">
-            <input type="number" id="bs-rate" class="bscalc-input" value="5" step="0.01">
-            <span class="bscalc-suffix">%</span>
+          <div class="bscalc-chart-cell">
+            <div class="bscalc-chart-title">P&amp;L Heatmap</div>
+            <canvas id="bs-canvas-heatmap"></canvas>
           </div>
         </div>
       </div>
 
-      <!-- Charts Grid -->
-      <div class="bscalc-charts-grid">
+      <!-- Greeks Charts — full width -->
+      <div class="bscalc-greeks-charts">
         <div class="bscalc-chart-cell">
-          <div class="bscalc-chart-title">Payoff</div>
-          <canvas id="bs-canvas-payoff"></canvas>
-        </div>
-        <div class="bscalc-chart-cell">
-          <div class="bscalc-chart-title">P&amp;L Heatmap</div>
-          <canvas id="bs-canvas-heatmap"></canvas>
-        </div>
-        <div class="bscalc-chart-cell bscalc-chart-greeks">
           <div class="bscalc-chart-title">Greeks</div>
           <canvas id="bs-canvas-greeks"></canvas>
         </div>
