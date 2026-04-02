@@ -7,22 +7,53 @@ var BSCalcManager = (function () {
   var spotFetched = null;   // last fetched spot price
 
   var SYMBOLS = [
-    { symbol: 'GC=F', label: 'Gold' },
-    { symbol: 'SI=F', label: 'Silver' },
-    { symbol: 'CL=F', label: 'WTI Crude' },
-    { symbol: 'NG=F', label: 'Natural Gas' },
-    { symbol: 'ZC=F', label: 'Corn' },
-    { symbol: 'ZS=F', label: 'Soybeans' },
-    { symbol: 'ZW=F', label: 'Wheat' },
-    { symbol: 'KC=F', label: 'Coffee' },
-    { symbol: 'SB=F', label: 'Sugar' },
-    { symbol: 'CT=F', label: 'Cotton' },
-    { symbol: 'PA=F', label: 'Palladium' },
-    { symbol: 'JPY=X', label: 'USD/JPY' },
-    { symbol: 'DX-Y.NYB', label: 'DXY Index' }
+    { symbol: 'GC=F', label: 'Gold', tick: 10 },
+    { symbol: 'SI=F', label: 'Silver', tick: 0.5 },
+    { symbol: 'CL=F', label: 'WTI Crude', tick: 1 },
+    { symbol: 'NG=F', label: 'Natural Gas', tick: 0.05 },
+    { symbol: 'ZC=F', label: 'Corn', tick: 5 },
+    { symbol: 'ZS=F', label: 'Soybeans', tick: 10 },
+    { symbol: 'ZW=F', label: 'Wheat', tick: 5 },
+    { symbol: 'KC=F', label: 'Coffee', tick: 5 },
+    { symbol: 'SB=F', label: 'Sugar', tick: 0.25 },
+    { symbol: 'CT=F', label: 'Cotton', tick: 1 },
+    { symbol: 'PA=F', label: 'Palladium', tick: 10 },
+    { symbol: 'JPY=X', label: 'USD/JPY', tick: 0.5 },
+    { symbol: 'DX-Y.NYB', label: 'DXY Index', tick: 0.5 }
   ];
 
   function el(id) { return document.getElementById(id); }
+
+  function getSymbolTick() {
+    var sym = el('bs-symbol').value;
+    for (var i = 0; i < SYMBOLS.length; i++) {
+      if (SYMBOLS[i].symbol === sym) return SYMBOLS[i].tick;
+    }
+    return 1;
+  }
+
+  // Populate strike dropdown with standard strikes around spot
+  function populateStrikes(spotPrice) {
+    var sel = el('bs-strike');
+    if (!sel) return;
+    var tick = getSymbolTick();
+    var atm = Math.round(spotPrice / tick) * tick;
+    sel.innerHTML = '';
+
+    // Generate ±15 strikes around ATM
+    var atmIdx = 0;
+    for (var i = -15; i <= 15; i++) {
+      var k = atm + i * tick;
+      if (k <= 0) continue;
+      var opt = document.createElement('option');
+      var decimals = tick < 1 ? 2 : 0;
+      opt.value = k;
+      opt.textContent = k.toFixed(decimals);
+      if (i === 0) { opt.textContent += ' (ATM)'; atmIdx = sel.options.length; }
+      sel.appendChild(opt);
+    }
+    sel.selectedIndex = atmIdx;
+  }
 
   /* ================================================================
      MATH — Normal distribution
@@ -263,7 +294,7 @@ var BSCalcManager = (function () {
         var price = last.close;
         spotFetched = price;
         el('bs-spot').value = price.toFixed(2);
-        el('bs-strike').value = price.toFixed(2);
+        populateStrikes(price);
         calculate();
       }
     } catch (e) {
@@ -790,6 +821,9 @@ var BSCalcManager = (function () {
       });
     }
 
+    // Populate initial strikes for default spot
+    populateStrikes(100);
+
     // Set default expiry to +30 days
     var expInput = el('bs-expiry');
     if (expInput) {
@@ -842,9 +876,20 @@ var BSCalcManager = (function () {
     });
 
     // Input listeners — recalculate on change
-    ['bs-spot', 'bs-strike', 'bs-vol', 'bs-rate'].forEach(function (id) {
+    ['bs-spot', 'bs-vol', 'bs-rate'].forEach(function (id) {
       var inp = el(id);
       if (inp) inp.addEventListener('input', calculate);
+    });
+    // Strike is a select — use change event
+    var strikeEl = el('bs-strike');
+    if (strikeEl) strikeEl.addEventListener('change', calculate);
+
+    // When spot changes manually, repopulate strikes
+    var spotEl = el('bs-spot');
+    if (spotEl) spotEl.addEventListener('change', function () {
+      var v = parseFloat(spotEl.value);
+      if (v > 0) populateStrikes(v);
+      calculate();
     });
 
     // Fetch spot button

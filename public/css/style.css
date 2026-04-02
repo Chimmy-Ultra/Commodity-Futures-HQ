@@ -3021,7 +3021,7 @@ body {
   font-size: 12px; font-weight: 700; color: var(--text-muted);
   text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; padding-left: 4px;
 }
-.bscalc-chart-cell canvas { width: 100%; aspect-ratio: 1 / 1; display: block; max-height: 300px; }
+.bscalc-chart-cell canvas { width: 100%; aspect-ratio: 1 / 1; display: block; }
 .bscalc-chart-greeks { grid-column: 1 / -1; }
 
 /* Responsive */
