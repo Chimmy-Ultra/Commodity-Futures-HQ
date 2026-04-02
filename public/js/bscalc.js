@@ -103,15 +103,13 @@ var BSCalcManager = (function () {
       var dirCls = leg.dir > 0 ? 'bs-leg-long' : 'bs-leg-short';
       var dirLabel = leg.dir > 0 ? '\u25B2 Long' : '\u25BC Short';
 
-      // Build strike options
+      // Build datalist options (suggestions)
+      var dlId = 'bs-strike-dl-' + i;
       var opts = '';
       for (var j = -15; j <= 15; j++) {
         var k = atm + j * tick;
         if (k <= 0) continue;
-        var label = k.toFixed(decimals);
-        if (j === 0) label += ' (ATM)';
-        var sel2 = Math.abs(k - leg.K) < tick * 0.01 ? ' selected' : '';
-        opts += '<option value="' + k + '"' + sel2 + '>' + label + '</option>';
+        opts += '<option value="' + k.toFixed(decimals) + '">';
       }
 
       html += '<div class="bs-leg-card">' +
@@ -123,7 +121,10 @@ var BSCalcManager = (function () {
         '</div>' +
         '<div class="bs-leg-strike-row">' +
           '<span class="bs-leg-strike-label">Strike</span>' +
-          '<select class="bscalc-select bs-leg-strike" data-leg="' + i + '">' + opts + '</select>' +
+          '<datalist id="' + dlId + '">' + opts + '</datalist>' +
+          '<input type="number" class="bscalc-input bs-leg-strike" list="' + dlId + '"' +
+            ' data-leg="' + i + '" value="' + leg.K.toFixed(decimals) + '"' +
+            ' step="' + tick + '">' +
         '</div>' +
       '</div>';
     }
@@ -134,12 +135,20 @@ var BSCalcManager = (function () {
 
     container.innerHTML = html;
 
-    // Attach strike change listeners
-    container.querySelectorAll('.bs-leg-strike').forEach(function (sel3) {
-      sel3.addEventListener('change', function () {
-        var idx = parseInt(sel3.dataset.leg);
-        legs[idx].K = parseFloat(sel3.value);
-        calculate();
+    // Attach strike listeners (input = number field, updates on change & valid input)
+    container.querySelectorAll('.bs-leg-strike').forEach(function (inp) {
+      function applyStrike() {
+        var v = parseFloat(inp.value);
+        if (v > 0) {
+          var idx = parseInt(inp.dataset.leg);
+          legs[idx].K = v;
+          calculate();
+        }
+      }
+      inp.addEventListener('change', applyStrike);
+      inp.addEventListener('input', function () {
+        var v = parseFloat(inp.value);
+        if (v > 0) applyStrike();
       });
     });
   }
