@@ -298,6 +298,34 @@ var BSCalcManager = (function () {
     return { ctx: ctx, w: w, h: h };
   }
 
+  // --- Grid helper ---
+  function drawGrid(ctx, pad, w, h, xMin, xMax, yMin, yMax, xTicks, yTicks) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(150,150,150,0.12)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    var pw = w - pad.left - pad.right;
+    var ph = h - pad.top - pad.bottom;
+    // Vertical grid lines
+    for (var i = 0; i <= xTicks; i++) {
+      var x = pad.left + i * pw / xTicks;
+      ctx.beginPath();
+      ctx.moveTo(x, pad.top);
+      ctx.lineTo(x, h - pad.bottom);
+      ctx.stroke();
+    }
+    // Horizontal grid lines
+    for (var i = 0; i <= yTicks; i++) {
+      var y = pad.top + i * ph / yTicks;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(w - pad.right, y);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
   // --- Payoff diagram ---
   function drawPayoff() {
     var cv = getCanvas('bs-canvas-payoff');
@@ -352,9 +380,8 @@ var BSCalcManager = (function () {
     function toX(v) { return pad.left + (v - xMin) / (xMax - xMin) * pw; }
     function toY(v) { return pad.top + (1 - (v - yMin) / (yMax - yMin)) * ph; }
 
-    // Grid & axes
-    ctx.strokeStyle = 'rgba(150,150,150,0.15)';
-    ctx.lineWidth = 1;
+    // Grid
+    drawGrid(ctx, pad, w, h, xMin, xMax, yMin, yMax, 5, 5);
     // Zero line
     if (yMin < 0 && yMax > 0) {
       ctx.strokeStyle = 'rgba(150,150,150,0.4)';
@@ -504,6 +531,19 @@ var BSCalcManager = (function () {
       ctx.lineWidth = 1;
       ctx.strokeRect(ox + 0.5, oy + 0.5, cellW - 1, cellH - 1);
 
+      // Sub-chart grid
+      ctx.save();
+      ctx.strokeStyle = 'rgba(150,150,150,0.12)';
+      ctx.setLineDash([4, 4]);
+      for (var gi2 = 1; gi2 < 3; gi2++) {
+        var gx = ox + pad.left + gi2 * pw2 / 3;
+        ctx.beginPath(); ctx.moveTo(gx, oy + pad.top); ctx.lineTo(gx, oy + cellH - pad.bottom); ctx.stroke();
+        var gy = oy + pad.top + gi2 * ph2 / 3;
+        ctx.beginPath(); ctx.moveTo(ox + pad.left, gy); ctx.lineTo(ox + cellW - pad.right, gy); ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.restore();
+
       // Title
       ctx.fillStyle = colors[gi];
       ctx.font = 'bold 12px Inter, sans-serif';
@@ -616,6 +656,9 @@ var BSCalcManager = (function () {
         ctx.fillRect(pad.left + xi * cellW, pad.top + yi * cellH, cellW + 1, cellH + 1);
       }
     }
+
+    // Grid overlay on heatmap
+    drawGrid(ctx, pad, w, h, xMin3, xMax3, yMin3, yMax3, 5, 5);
 
     // Axes labels
     ctx.fillStyle = '#999';
