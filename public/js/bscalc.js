@@ -84,6 +84,14 @@ var BSCalcManager = (function () {
     var strat = STRATEGIES[strategy];
     if (!strat) return;
     legs = strat.fn(atm, tick);
+    // Auto-fill BS premium for each leg (user can override)
+    var p = getParams();
+    if (p.S > 0 && p.T > 0 && p.sigma > 0) {
+      for (var i = 0; i < legs.length; i++) {
+        legs[i].premium = priceOnly(p.S, legs[i].K, p.T, p.r, p.sigma, legs[i].type);
+        legs[i].premiumManual = false;
+      }
+    }
     renderLegsTable();
     calculate();
   }
@@ -112,6 +120,9 @@ var BSCalcManager = (function () {
         opts += '<option value="' + k.toFixed(decimals) + '">';
       }
 
+      var premVal = (leg.premium != null) ? leg.premium.toFixed(2) : '';
+      var premDecimals = tick < 1 ? 4 : 2;
+
       html += '<div class="bs-leg-card">' +
         '<div class="bs-leg-header">' +
           '<span class="bs-leg-num">#' + (i + 1) + '</span>' +
@@ -126,6 +137,11 @@ var BSCalcManager = (function () {
             ' data-leg="' + i + '" value="' + leg.K.toFixed(decimals) + '"' +
             ' step="' + tick + '">' +
         '</div>' +
+        '<div class="bs-leg-strike-row bs-leg-premium-row">' +
+          '<span class="bs-leg-strike-label">Premium</span>' +
+          '<input type="number" class="bscalc-input bs-leg-premium" min="0" step="0.01"' +
+            ' data-leg="' + i + '" value="' + premVal + '" placeholder="BS auto">' +
+        '</div>' +
       '</div>';
     }
 
@@ -135,20 +151,39 @@ var BSCalcManager = (function () {
 
     container.innerHTML = html;
 
-    // Attach strike listeners (input = number field, updates on change & valid input)
+    // Strike listeners
     container.querySelectorAll('.bs-leg-strike').forEach(function (inp) {
       function applyStrike() {
         var v = parseFloat(inp.value);
         if (v > 0) {
           var idx = parseInt(inp.dataset.leg);
           legs[idx].K = v;
+          // If premium not manually locked, refresh BS premium for new strike
+          if (!legs[idx].premiumManual) {
+            var p = getParams();
+            if (p.S > 0 && p.T > 0 && p.sigma > 0) {
+              legs[idx].premium = priceOnly(p.S, v, p.T, p.r, p.sigma, legs[idx].type);
+              var premInp = container.querySelector('.bs-leg-premium[data-leg="' + idx + '"]');
+              if (premInp) premInp.value = legs[idx].premium.toFixed(2);
+            }
+          }
           calculate();
         }
       }
       inp.addEventListener('change', applyStrike);
-      inp.addEventListener('input', function () {
+      inp.addEventListener('input', function () { var v = parseFloat(inp.value); if (v > 0) applyStrike(); });
+    });
+
+    // Premium listeners
+    container.querySelectorAll('.bs-leg-premium').forEach(function (inp) {
+      inp.addEventListener('change', function () {
+        var idx = parseInt(inp.dataset.leg);
         var v = parseFloat(inp.value);
-        if (v > 0) applyStrike();
+        if (!isNaN(v) && v >= 0) {
+          legs[idx].premium = v;
+          legs[idx].premiumManual = true;
+        }
+        calculate();
       });
     });
   }
@@ -300,6 +335,18 @@ var BSCalcManager = (function () {
       renderResult({ price: 0, delta: 0, gamma: 0, vega: 0, theta: 0, rho: 0 }, p);
       drawChart();
       return;
+    }
+
+    // Update auto premiums (non-manual legs) and sync input fields
+    var container = el('bs-legs-container');
+    for (var i = 0; i < legs.length; i++) {
+      if (!legs[i].premiumManual) {
+        legs[i].premium = priceOnly(p.S, legs[i].K, p.T, p.r, p.sigma, legs[i].type);
+        if (container) {
+          var pi = container.querySelector('.bs-leg-premium[data-leg="' + i + '"]');
+          if (pi && document.activeElement !== pi) pi.value = legs[i].premium.toFixed(2);
+        }
+      }
     }
 
     var net = { price: 0, delta: 0, gamma: 0, vega: 0, theta: 0, rho: 0 };
@@ -471,10 +518,11 @@ var BSCalcManager = (function () {
     var steps = 200, dx = (xMax - xMin) / steps;
     var hasUnd = STRATEGIES[strategy].hasUnderlying;
 
-    // Net premium at entry
+    // Net premium at entry (use leg.premium if set, else BS)
     var netPremium = 0;
     for (var li = 0; li < legs.length; li++) {
-      netPremium += priceOnly(p.S, legs[li].K, p.T, p.r, p.sigma, legs[li].type) * legs[li].dir * legs[li].qty;
+      var legPrem = (legs[li].premium != null) ? legs[li].premium : priceOnly(p.S, legs[li].K, p.T, p.r, p.sigma, legs[li].type);
+      netPremium += legPrem * legs[li].dir * legs[li].qty;
     }
 
     // Compute combined payoff and theoretical
@@ -548,6 +596,36 @@ var BSCalcManager = (function () {
         ctx.beginPath(); ctx.arc(toX(p.S), toY(theories[idx]), 5, 0, 2 * Math.PI); ctx.fill();
       }
     }
+
+    // Break-even points: zero crossings in At Expiry payoffs
+    var bePoints = [];
+    for (var i = 0; i < steps; i++) {
+      var y0 = payoffs[i], y1 = payoffs[i + 1];
+      if (y0 !== y1 && ((y0 <= 0 && y1 >= 0) || (y0 >= 0 && y1 <= 0))) {
+        var bex = (xMin + i * dx) + (-y0 / (y1 - y0)) * dx; // linear interpolate
+        bePoints.push(bex);
+      }
+    }
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,211,77,0.7)';
+    ctx.fillStyle = '#ffd93d';
+    ctx.setLineDash([3, 3]);
+    ctx.lineWidth = 1.5;
+    ctx.font = 'bold 9px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    bePoints.forEach(function (bex) {
+      var bx = toX(bex);
+      if (bx < pad.left || bx > w - pad.right) return;
+      ctx.beginPath(); ctx.moveTo(bx, pad.top); ctx.lineTo(bx, h - pad.bottom); ctx.stroke();
+      // Dot on zero line
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(bx, toY(0), 3.5, 0, 2 * Math.PI); ctx.fill();
+      ctx.setLineDash([3, 3]);
+      // Label (alternate above/below to avoid overlap)
+      var labelY = pad.top + 10;
+      ctx.fillText('B/E ' + bex.toFixed(0), bx, labelY);
+    });
+    ctx.restore();
 
     // Legend
     ctx.font = '10px Inter, sans-serif';
@@ -669,10 +747,11 @@ var BSCalcManager = (function () {
     var xSteps = 50, ySteps = 35;
     var cellW2 = pw3 / xSteps, cellH2 = ph3 / ySteps;
 
-    // Net premium at entry
+    // Net premium at entry (use leg.premium if set, else BS)
     var netPremium = 0;
     for (var li = 0; li < legs.length; li++) {
-      netPremium += priceOnly(p.S, legs[li].K, p.T, p.r, p.sigma, legs[li].type) * legs[li].dir * legs[li].qty;
+      var legPrem2 = (legs[li].premium != null) ? legs[li].premium : priceOnly(p.S, legs[li].K, p.T, p.r, p.sigma, legs[li].type);
+      netPremium += legPrem2 * legs[li].dir * legs[li].qty;
     }
 
     var pnlMin = Infinity, pnlMax = -Infinity;

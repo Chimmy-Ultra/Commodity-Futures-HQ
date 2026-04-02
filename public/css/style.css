@@ -3123,6 +3123,9 @@ body {
 .bs-leg-short { background: rgba(255,107,107,0.15); color: #ff6b6b; }
 .bs-leg-call { background: rgba(78,205,196,0.1); color: #4ecdc4; }
 .bs-leg-put { background: rgba(255,107,107,0.1); color: #ff6b6b; }
+.bs-leg-premium-row { margin-top: 4px; }
+.bs-leg-premium-row .bs-leg-strike-label { color: var(--text-hint); font-size: 10px; }
+.bs-leg-premium-row .bscalc-input { font-size: 12px; }
 
 /* Responsive */
 @media (max-width: 768px) {
