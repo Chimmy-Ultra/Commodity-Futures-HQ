@@ -23,6 +23,7 @@
       'nav-gc': function () { GroupChatManager.show(); },
       'nav-reports': function () { AnalysisManager.showReportPanel(); },
       'nav-databento': function () { DatabentoManager.show(); },
+      'nav-bscalc': function () { BSCalcManager.show(); },
     };
     Object.keys(navMap).forEach(function (id) {
       var el = document.getElementById(id);
@@ -159,6 +160,8 @@
     if (calp) calp.classList.remove('visible');
     var gcp = document.getElementById('groupchat-panel');
     if (gcp) gcp.classList.remove('visible');
+    var bsp = document.getElementById('bscalc-panel');
+    if (bsp) bsp.classList.remove('visible');
     document.getElementById('welcome').style.display = '';
     buildHomeRecentReports();
     document.getElementById('topbar-title').textContent = 'Commodity HQ';
@@ -180,6 +183,8 @@
     if (calp2) calp2.classList.remove('visible');
     var gcp2 = document.getElementById('groupchat-panel');
     if (gcp2) gcp2.classList.remove('visible');
+    var bsp2 = document.getElementById('bscalc-panel');
+    if (bsp2) bsp2.classList.remove('visible');
     document.getElementById('topbar-title').textContent = c.name;
     document.getElementById('topbar-role').textContent = c.role;
     if (isMobile()) closeSidebar();
