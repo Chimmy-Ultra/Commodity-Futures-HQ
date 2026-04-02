@@ -25,22 +25,38 @@ var BSCalcManager = (function () {
   ];
 
   var STRATEGIES = {
-    single_call:    { label: 'Call',              fn: function(a,t){ return [{type:'call', K:a, dir:1, qty:1}]; }},
-    single_put:     { label: 'Put',               fn: function(a,t){ return [{type:'put',  K:a, dir:1, qty:1}]; }},
+    /* --- Single Legs --- */
+    single_call:    { label: 'Long Call',           fn: function(a,t){ return [{type:'call', K:a, dir:1, qty:1}]; }},
+    single_put:     { label: 'Long Put',            fn: function(a,t){ return [{type:'put',  K:a, dir:1, qty:1}]; }},
+    short_call:     { label: 'Short Call',           fn: function(a,t){ return [{type:'call', K:a, dir:-1, qty:1}]; }},
+    short_put:      { label: 'Short Put',            fn: function(a,t){ return [{type:'put',  K:a, dir:-1, qty:1}]; }},
+    /* --- Vertical Spreads --- */
     bull_call:      { label: 'Bull Call Spread',   fn: function(a,t){ return [{type:'call', K:a, dir:1, qty:1},{type:'call', K:a+2*t, dir:-1, qty:1}]; }},
     bear_put:       { label: 'Bear Put Spread',    fn: function(a,t){ return [{type:'put',  K:a, dir:1, qty:1},{type:'put',  K:a-2*t, dir:-1, qty:1}]; }},
+    bear_call:      { label: 'Bear Call Spread',   fn: function(a,t){ return [{type:'call', K:a, dir:-1, qty:1},{type:'call', K:a+2*t, dir:1, qty:1}]; }},
+    bull_put:       { label: 'Bull Put Spread',    fn: function(a,t){ return [{type:'put',  K:a, dir:-1, qty:1},{type:'put',  K:a-2*t, dir:1, qty:1}]; }},
+    /* --- Straddles & Strangles --- */
     straddle:       { label: 'Long Straddle',      fn: function(a,t){ return [{type:'call', K:a, dir:1, qty:1},{type:'put',  K:a, dir:1, qty:1}]; }},
+    short_straddle: { label: 'Short Straddle',     fn: function(a,t){ return [{type:'call', K:a, dir:-1, qty:1},{type:'put', K:a, dir:-1, qty:1}]; }},
     strangle:       { label: 'Long Strangle',      fn: function(a,t){ return [{type:'call', K:a+2*t, dir:1, qty:1},{type:'put', K:a-2*t, dir:1, qty:1}]; }},
+    short_strangle: { label: 'Short Strangle',     fn: function(a,t){ return [{type:'call', K:a+2*t, dir:-1, qty:1},{type:'put', K:a-2*t, dir:-1, qty:1}]; }},
+    /* --- Iron & Butterfly --- */
     iron_condor:    { label: 'Iron Condor',        fn: function(a,t){ return [
       {type:'put', K:a-4*t, dir:1, qty:1},{type:'put', K:a-2*t, dir:-1, qty:1},
       {type:'call', K:a+2*t, dir:-1, qty:1},{type:'call', K:a+4*t, dir:1, qty:1}
+    ]; }},
+    iron_butterfly: { label: 'Iron Butterfly',     fn: function(a,t){ return [
+      {type:'put', K:a-2*t, dir:1, qty:1},{type:'put', K:a, dir:-1, qty:1},
+      {type:'call', K:a, dir:-1, qty:1},{type:'call', K:a+2*t, dir:1, qty:1}
     ]; }},
     butterfly:      { label: 'Butterfly',          fn: function(a,t){ return [
       {type:'call', K:a-2*t, dir:1, qty:1},{type:'call', K:a, dir:-1, qty:2},
       {type:'call', K:a+2*t, dir:1, qty:1}
     ]; }},
+    /* --- With Underlying --- */
     covered_call:   { label: 'Covered Call',       fn: function(a,t){ return [{type:'call', K:a+2*t, dir:-1, qty:1}]; }, hasUnderlying: true },
-    protective_put: { label: 'Protective Put',     fn: function(a,t){ return [{type:'put',  K:a-2*t, dir:1, qty:1}]; }, hasUnderlying: true }
+    protective_put: { label: 'Protective Put',     fn: function(a,t){ return [{type:'put',  K:a-2*t, dir:1, qty:1}]; }, hasUnderlying: true },
+    collar:         { label: 'Collar',             fn: function(a,t){ return [{type:'put', K:a-2*t, dir:1, qty:1},{type:'call', K:a+2*t, dir:-1, qty:1}]; }, hasUnderlying: true }
   };
 
   function el(id) { return document.getElementById(id); }
@@ -404,7 +420,7 @@ var BSCalcManager = (function () {
     ctx.restore();
   }
 
-  // --- chart x-range based on all leg strikes ---
+  // --- Smart chart x-range: adapts to vol, DTE, and strike spread ---
   function getXRange(p) {
     var kMin = Infinity, kMax = -Infinity;
     for (var i = 0; i < legs.length; i++) {
@@ -414,9 +430,21 @@ var BSCalcManager = (function () {
     if (kMin === Infinity) { kMin = p.S; kMax = p.S; }
     var mid = (kMin + kMax) / 2;
     var spread = kMax - kMin;
-    var stdMove = p.S * p.sigma * Math.sqrt(Math.max(p.T, 1 / 365)) * 1.0;
-    var range = Math.max(stdMove, spread * 2);
-    return { xMin: Math.max(mid - range, mid * 0.3), xMax: mid + range };
+
+    // 1) Vol-based: ~0.5 standard deviations — tight for detail, widens with vol & DTE
+    var stdMove = p.S * p.sigma * Math.sqrt(Math.max(p.T, 1 / 365));
+    var volRange = stdMove * 0.5;
+
+    // 2) Strike-based: cover all legs with 30% padding beyond outermost strikes
+    var strikeRange = spread > 0 ? spread * 1.3 : 0;
+
+    // 3) Use the larger of vol-based and strike-based
+    var range = Math.max(volRange, strikeRange);
+
+    // 4) Floor: at least show ATM ± 10 ticks so chart is never too zoomed in
+    range = Math.max(range, getSymbolTick() * 10);
+
+    return { xMin: Math.max(mid - range, 0.01), xMax: mid + range };
   }
 
   // --- Payoff diagram ---
