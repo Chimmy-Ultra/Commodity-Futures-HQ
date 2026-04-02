@@ -314,9 +314,10 @@ var BSCalcManager = (function () {
     var pw = w - pad.left - pad.right;
     var ph = h - pad.top - pad.bottom;
 
-    // X range: ±40% around strike
-    var xMin = p.K * 0.6;
-    var xMax = p.K * 1.4;
+    // X range: ±2.5 std deviations (dynamic, based on σ and T)
+    var stdMove = p.S * p.sigma * Math.sqrt(Math.max(p.T, 1/365)) * 2.5;
+    var xMin = Math.max(p.K - stdMove, p.K * 0.5);
+    var xMax = p.K + stdMove;
     var steps = 200;
     var dx = (xMax - xMin) / steps;
 
@@ -466,8 +467,9 @@ var BSCalcManager = (function () {
     var cellH = h / rows;
     var pad = { top: 28, right: 14, bottom: 28, left: 50 };
 
-    var xMin = p.K * 0.6;
-    var xMax = p.K * 1.4;
+    var stdMove2 = p.S * p.sigma * Math.sqrt(Math.max(p.T, 1/365)) * 2.5;
+    var xMin = Math.max(p.K - stdMove2, p.K * 0.5);
+    var xMax = p.K + stdMove2;
     var steps = 100;
     var dx = (xMax - xMin) / steps;
 
@@ -574,9 +576,10 @@ var BSCalcManager = (function () {
     var pw3 = w - pad.left - pad.right;
     var ph3 = h - pad.top - pad.bottom;
 
-    // X: spot price, Y: volatility
-    var xMin3 = p.K * 0.7;
-    var xMax3 = p.K * 1.3;
+    // X: spot price range based on ±2.5 std deviations
+    var stdMove3 = p.S * p.sigma * Math.sqrt(Math.max(p.T, 1/365)) * 2.5;
+    var xMin3 = Math.max(p.K - stdMove3, p.K * 0.5);
+    var xMax3 = p.K + stdMove3;
     var yMin3 = Math.max(p.sigma * 0.3, 0.01);
     var yMax3 = p.sigma * 2;
 
