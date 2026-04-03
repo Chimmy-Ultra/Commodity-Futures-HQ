@@ -432,6 +432,39 @@
             <div class="bscalc-chart-title">P&amp;L Heatmap</div>
             <canvas id="bs-canvas-heatmap"></canvas>
           </div>
+          <div class="bscalc-chart-cell">
+            <div class="bscalc-chart-title">Risk / Reward</div>
+            <div id="bs-risk-reward" class="bs-rr-grid">
+              <div class="bs-rr-item bs-rr-profit">
+                <div class="bs-rr-label">Max Profit</div>
+                <div class="bs-rr-value" id="bs-rr-maxprofit">—</div>
+              </div>
+              <div class="bs-rr-item bs-rr-loss">
+                <div class="bs-rr-label">Max Loss</div>
+                <div class="bs-rr-value" id="bs-rr-maxloss">—</div>
+              </div>
+              <div class="bs-rr-item">
+                <div class="bs-rr-label">Breakeven</div>
+                <div class="bs-rr-value" id="bs-rr-breakeven">—</div>
+              </div>
+              <div class="bs-rr-item">
+                <div class="bs-rr-label">P(Profit)</div>
+                <div class="bs-rr-value" id="bs-rr-pprob">—</div>
+              </div>
+              <div class="bs-rr-item bs-rr-wide">
+                <div class="bs-rr-label">Risk / Reward Ratio</div>
+                <div class="bs-rr-bar-wrap">
+                  <div class="bs-rr-bar-profit" id="bs-rr-bar-profit"></div>
+                  <div class="bs-rr-bar-loss" id="bs-rr-bar-loss"></div>
+                </div>
+                <div class="bs-rr-value" id="bs-rr-ratio">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="bscalc-chart-cell">
+            <div class="bscalc-chart-title">Probability Cone</div>
+            <canvas id="bs-canvas-probcone"></canvas>
+          </div>
         </div>
       </div>
 
