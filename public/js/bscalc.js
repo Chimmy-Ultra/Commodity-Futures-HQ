@@ -571,7 +571,7 @@ var BSCalcManager = (function () {
     ctx.setLineDash([]);
 
     // Axis labels
-    ctx.fillStyle = '#999'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#444'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'center';
     for (var i = 0; i <= 3; i++) { var v = xMin + (xMax - xMin) * i / 3; ctx.fillText(v.toFixed(0), toX(v), h - pad.bottom + 14); }
     ctx.textAlign = 'right';
     for (var i = 0; i <= 4; i++) { var v = yMin + (yMax - yMin) * i / 4; ctx.fillText(v.toFixed(1), pad.left - 6, toY(v) + 3); }
@@ -631,12 +631,12 @@ var BSCalcManager = (function () {
     ctx.font = '10px Inter, sans-serif';
     var lx = pad.left + 8, ly = pad.top + 12;
     ctx.fillStyle = 'rgba(78,205,196,0.9)'; ctx.fillRect(lx, ly - 6, 14, 3);
-    ctx.fillStyle = '#ccc'; ctx.textAlign = 'left'; ctx.fillText('Theoretical', lx + 18, ly);
+    ctx.fillStyle = '#444'; ctx.textAlign = 'left'; ctx.fillText('Theoretical', lx + 18, ly);
     ly += 14;
     ctx.fillStyle = 'rgba(255,107,107,0.8)'; ctx.fillRect(lx, ly - 6, 14, 3);
-    ctx.fillStyle = '#ccc'; ctx.fillText('At Expiry', lx + 18, ly);
+    ctx.fillStyle = '#444'; ctx.fillText('At Expiry', lx + 18, ly);
 
-    ctx.fillStyle = '#888'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#555'; ctx.textAlign = 'center';
     ctx.fillText('Underlying Price', pad.left + pw / 2, h - 4);
   }
 
@@ -709,7 +709,7 @@ var BSCalcManager = (function () {
       }
 
       // Y axis labels
-      ctx.fillStyle = '#888'; ctx.font = '9px JetBrains Mono, monospace'; ctx.textAlign = 'right';
+      ctx.fillStyle = '#444'; ctx.font = '9px JetBrains Mono, monospace'; ctx.textAlign = 'right';
       for (var ti = 0; ti <= 2; ti++) { var v2 = yMin2 + (yMax2 - yMin2) * ti / 2; ctx.fillText(v2.toFixed(3), ox + pad.left - 4, toY2(v2) + 3); }
       // X axis labels
       ctx.textAlign = 'center'; ctx.font = '9px JetBrains Mono, monospace';
@@ -784,7 +784,7 @@ var BSCalcManager = (function () {
     drawGrid(ctx, pad, w, h, 3, 3);
 
     // Axes labels
-    ctx.fillStyle = '#999'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#444'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'center';
     for (var i = 0; i <= 3; i++) { var v = xMin3 + (xMax3 - xMin3) * i / 3; ctx.fillText(v.toFixed(0), pad.left + i * pw3 / 3, h - pad.bottom + 14); }
     ctx.textAlign = 'right';
     for (var i = 0; i <= 3; i++) { var vol = yMin3 + (yMax3 - yMin3) * i / 3; ctx.fillText((vol * 100).toFixed(0) + '%', pad.left - 6, pad.top + (1 - i / 3) * ph3 + 4); }
