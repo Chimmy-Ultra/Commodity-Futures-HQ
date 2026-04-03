@@ -627,9 +627,9 @@ var BSCalcManager = (function () {
     });
     ctx.restore();
 
-    // Legend
+    // Legend (top-right, clear of Y-axis and data)
     ctx.font = '10px Inter, sans-serif';
-    var lx = pad.left + 8, ly = pad.top + 12;
+    var lx = w - pad.right - 90, ly = pad.top + 12;
     ctx.fillStyle = 'rgba(78,205,196,0.9)'; ctx.fillRect(lx, ly - 6, 14, 3);
     ctx.fillStyle = '#444'; ctx.textAlign = 'left'; ctx.fillText('Theoretical', lx + 18, ly);
     ly += 14;
