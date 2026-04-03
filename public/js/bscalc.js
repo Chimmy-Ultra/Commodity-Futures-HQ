@@ -448,6 +448,8 @@ var BSCalcManager = (function () {
     drawPayoff();
     drawGreeks();
     drawHeatmap();
+    renderRiskReward();
+    drawProbCone();
   }
 
   function getCanvas(canvasId) {
@@ -571,7 +573,7 @@ var BSCalcManager = (function () {
     ctx.setLineDash([]);
 
     // Axis labels
-    ctx.fillStyle = '#999'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#444'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'center';
     for (var i = 0; i <= 3; i++) { var v = xMin + (xMax - xMin) * i / 3; ctx.fillText(v.toFixed(0), toX(v), h - pad.bottom + 14); }
     ctx.textAlign = 'right';
     for (var i = 0; i <= 4; i++) { var v = yMin + (yMax - yMin) * i / 4; ctx.fillText(v.toFixed(1), pad.left - 6, toY(v) + 3); }
@@ -627,16 +629,21 @@ var BSCalcManager = (function () {
     });
     ctx.restore();
 
-    // Legend
+    // Legend (top-right with background panel)
     ctx.font = '10px Inter, sans-serif';
-    var lx = pad.left + 8, ly = pad.top + 12;
+    var lx = w - pad.right - 100, ly = pad.top + 4;
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillRect(lx - 4, ly - 2, 104, 32);
+    ctx.strokeStyle = 'rgba(150,150,150,0.2)'; ctx.lineWidth = 1;
+    ctx.strokeRect(lx - 4, ly - 2, 104, 32);
+    ly += 10;
     ctx.fillStyle = 'rgba(78,205,196,0.9)'; ctx.fillRect(lx, ly - 6, 14, 3);
-    ctx.fillStyle = '#ccc'; ctx.textAlign = 'left'; ctx.fillText('Theoretical', lx + 18, ly);
+    ctx.fillStyle = '#444'; ctx.textAlign = 'left'; ctx.fillText('Theoretical', lx + 18, ly);
     ly += 14;
     ctx.fillStyle = 'rgba(255,107,107,0.8)'; ctx.fillRect(lx, ly - 6, 14, 3);
-    ctx.fillStyle = '#ccc'; ctx.fillText('At Expiry', lx + 18, ly);
+    ctx.fillStyle = '#444'; ctx.fillText('At Expiry', lx + 18, ly);
 
-    ctx.fillStyle = '#888'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#555'; ctx.textAlign = 'center';
     ctx.fillText('Underlying Price', pad.left + pw / 2, h - 4);
   }
 
@@ -709,7 +716,7 @@ var BSCalcManager = (function () {
       }
 
       // Y axis labels
-      ctx.fillStyle = '#888'; ctx.font = '9px JetBrains Mono, monospace'; ctx.textAlign = 'right';
+      ctx.fillStyle = '#444'; ctx.font = '9px JetBrains Mono, monospace'; ctx.textAlign = 'right';
       for (var ti = 0; ti <= 2; ti++) { var v2 = yMin2 + (yMax2 - yMin2) * ti / 2; ctx.fillText(v2.toFixed(3), ox + pad.left - 4, toY2(v2) + 3); }
       // X axis labels
       ctx.textAlign = 'center'; ctx.font = '9px JetBrains Mono, monospace';
@@ -784,7 +791,7 @@ var BSCalcManager = (function () {
     drawGrid(ctx, pad, w, h, 3, 3);
 
     // Axes labels
-    ctx.fillStyle = '#999'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#444'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'center';
     for (var i = 0; i <= 3; i++) { var v = xMin3 + (xMax3 - xMin3) * i / 3; ctx.fillText(v.toFixed(0), pad.left + i * pw3 / 3, h - pad.bottom + 14); }
     ctx.textAlign = 'right';
     for (var i = 0; i <= 3; i++) { var vol = yMin3 + (yMax3 - yMin3) * i / 3; ctx.fillText((vol * 100).toFixed(0) + '%', pad.left - 6, pad.top + (1 - i / 3) * ph3 + 4); }
@@ -821,16 +828,291 @@ var BSCalcManager = (function () {
   }
 
   /* ================================================================
+     RISK / REWARD SUMMARY
+     ================================================================ */
+  function renderRiskReward() {
+    var elMaxP = el('bs-rr-maxprofit');
+    var elMaxL = el('bs-rr-maxloss');
+    var elBE   = el('bs-rr-breakeven');
+    var elProb = el('bs-rr-pprob');
+    var elRatio = el('bs-rr-ratio');
+    var barP = el('bs-rr-bar-profit');
+    var barL = el('bs-rr-bar-loss');
+    if (!elMaxP) return;
+
+    var p = getParams();
+    if (p.S <= 0 || p.T <= 0 || p.sigma <= 0 || legs.length === 0) {
+      elMaxP.textContent = elMaxL.textContent = elBE.textContent = elProb.textContent = elRatio.textContent = '—';
+      if (barP) { barP.style.width = '50%'; barL.style.width = '50%'; }
+      return;
+    }
+
+    var hasUnd = STRATEGIES[strategy].hasUnderlying;
+
+    // Net premium at entry
+    var netPremium = 0;
+    for (var i = 0; i < legs.length; i++) {
+      var lp = (legs[i].premium != null) ? legs[i].premium : priceOnly(p.S, legs[i].K, p.T, p.r, p.sigma, legs[i].type);
+      netPremium += lp * legs[i].dir * legs[i].qty;
+    }
+
+    // Sample payoff at expiry over a very wide range
+    var lo = p.S * 0.01, hi = p.S * 3;
+    var steps = 2000, dx = (hi - lo) / steps;
+    var maxProfit = -Infinity, maxLoss = Infinity;
+    var bePoints = [];
+
+    for (var i = 0; i <= steps; i++) {
+      var sx = lo + i * dx;
+      var pf = 0;
+      for (var li = 0; li < legs.length; li++) {
+        var intrinsic = legs[li].type === 'call' ? Math.max(sx - legs[li].K, 0) : Math.max(legs[li].K - sx, 0);
+        pf += intrinsic * legs[li].dir * legs[li].qty;
+      }
+      if (hasUnd) pf += sx - p.S;
+      pf -= netPremium;
+      if (pf > maxProfit) maxProfit = pf;
+      if (pf < maxLoss) maxLoss = pf;
+      // Zero-crossing detection
+      if (i > 0) {
+        var prev = (function () {
+          var sx0 = lo + (i - 1) * dx, v = 0;
+          for (var li = 0; li < legs.length; li++) {
+            var intr = legs[li].type === 'call' ? Math.max(sx0 - legs[li].K, 0) : Math.max(legs[li].K - sx0, 0);
+            v += intr * legs[li].dir * legs[li].qty;
+          }
+          if (hasUnd) v += sx0 - p.S;
+          return v - netPremium;
+        })();
+        if ((prev <= 0 && pf >= 0) || (prev >= 0 && pf <= 0)) {
+          var bex = lo + (i - 1) * dx + (-prev / (pf - prev)) * dx;
+          bePoints.push(bex);
+        }
+      }
+    }
+
+    // Determine unlimited by net call direction (only upside is truly unlimited; spot >= 0)
+    var upsideSlope = 0;
+    for (var li = 0; li < legs.length; li++) {
+      if (legs[li].type === 'call') upsideSlope += legs[li].dir * legs[li].qty;
+    }
+    if (hasUnd) upsideSlope += 1;
+    var profitUnlimited = upsideSlope > 0;
+    var lossUnlimited = upsideSlope < 0;
+
+    // Format
+    var tick = getSymbolTick();
+    var dec = tick < 1 ? 2 : 0;
+    elMaxP.textContent = profitUnlimited ? 'Unlimited' : maxProfit.toFixed(dec);
+    elMaxL.textContent = lossUnlimited ? 'Unlimited' : maxLoss.toFixed(dec);
+
+    // Breakeven
+    if (bePoints.length === 0) {
+      elBE.textContent = 'N/A';
+    } else {
+      elBE.textContent = bePoints.map(function (b) { return b.toFixed(dec); }).join(' / ');
+    }
+    elBE.style.fontSize = bePoints.length > 1 ? '13px' : '';
+
+    // P(Profit) — numerical integration using log-normal PDF
+    var totalProb = 0, profitProb = 0;
+    var mu = Math.log(p.S) + (p.r - 0.5 * p.sigma * p.sigma) * p.T;
+    var sig = p.sigma * Math.sqrt(p.T);
+    for (var i = 0; i <= steps; i++) {
+      var sx = lo + i * dx;
+      if (sx <= 0) continue;
+      var lnSx = Math.log(sx);
+      var pdf = Math.exp(-0.5 * Math.pow((lnSx - mu) / sig, 2)) / (sx * sig * Math.sqrt(2 * Math.PI));
+      var weight = pdf * dx;
+      totalProb += weight;
+      // Payoff at this spot
+      var pf = 0;
+      for (var li = 0; li < legs.length; li++) {
+        var intrinsic = legs[li].type === 'call' ? Math.max(sx - legs[li].K, 0) : Math.max(legs[li].K - sx, 0);
+        pf += intrinsic * legs[li].dir * legs[li].qty;
+      }
+      if (hasUnd) pf += sx - p.S;
+      pf -= netPremium;
+      if (pf > 0) profitProb += weight;
+    }
+    var pProfit = totalProb > 0 ? profitProb / totalProb : 0;
+    elProb.textContent = (pProfit * 100).toFixed(1) + '%';
+    elProb.style.color = pProfit >= 0.5 ? '#4ecdc4' : '#ff6b6b';
+
+    // Risk / Reward ratio
+    var absMaxP = profitUnlimited ? Infinity : Math.abs(maxProfit);
+    var absMaxL = lossUnlimited ? Infinity : Math.abs(maxLoss);
+    if (profitUnlimited && lossUnlimited) {
+      elRatio.textContent = '—';
+      if (barP) { barP.style.width = '50%'; barL.style.width = '50%'; }
+    } else if (profitUnlimited) {
+      elRatio.textContent = 'Reward: Unlimited';
+      if (barP) { barP.style.width = '85%'; barL.style.width = '15%'; }
+    } else if (lossUnlimited) {
+      elRatio.textContent = 'Risk: Unlimited';
+      if (barP) { barP.style.width = '15%'; barL.style.width = '85%'; }
+    } else if (absMaxL > 0) {
+      var ratio = absMaxP / absMaxL;
+      elRatio.textContent = '1 : ' + ratio.toFixed(2);
+      var pPct = absMaxP / (absMaxP + absMaxL) * 100;
+      if (barP) { barP.style.width = pPct + '%'; barL.style.width = (100 - pPct) + '%'; }
+    } else {
+      elRatio.textContent = '—';
+      if (barP) { barP.style.width = '100%'; barL.style.width = '0%'; }
+    }
+  }
+
+  /* ================================================================
+     PROBABILITY CONE
+     ================================================================ */
+  function drawProbCone() {
+    var cv = getCanvas('bs-canvas-probcone');
+    if (!cv) return;
+    var ctx = cv.ctx, w = cv.w, h = cv.h;
+    var p = getParams();
+    if (p.S <= 0 || p.T <= 0 || p.sigma <= 0 || legs.length === 0) return;
+
+    var pad = { top: 30, right: 30, bottom: 40, left: 60 };
+    var pw = w - pad.left - pad.right, ph = h - pad.top - pad.bottom;
+    var days = Math.max(Math.round(p.diffDays), 1);
+    var drift = p.r - 0.5 * p.sigma * p.sigma;
+
+    // Compute cone boundaries (1σ, 2σ) at each day
+    var upper2 = [], upper1 = [], lower1 = [], lower2 = [], median = [];
+    var yMin = Infinity, yMax = -Infinity;
+    for (var d = 0; d <= days; d++) {
+      var t = d / 365;
+      var sqrtT = Math.sqrt(t);
+      var mu = Math.log(p.S) + drift * t;
+      var sig = p.sigma * sqrtT;
+      var med = Math.exp(mu);
+      var u1 = Math.exp(mu + sig);
+      var u2 = Math.exp(mu + 2 * sig);
+      var l1 = Math.exp(mu - sig);
+      var l2 = Math.exp(mu - 2 * sig);
+      median.push(med);
+      upper1.push(u1); upper2.push(u2);
+      lower1.push(l1); lower2.push(l2);
+      yMin = Math.min(yMin, l2);
+      yMax = Math.max(yMax, u2);
+    }
+
+    // Also include strikes in y-range
+    for (var i = 0; i < legs.length; i++) {
+      yMin = Math.min(yMin, legs[i].K);
+      yMax = Math.max(yMax, legs[i].K);
+    }
+    var yRange = yMax - yMin || 1;
+    yMin -= yRange * 0.08; yMax += yRange * 0.08;
+
+    function toX(d) { return pad.left + (d / days) * pw; }
+    function toY(v) { return pad.top + (1 - (v - yMin) / (yMax - yMin)) * ph; }
+
+    drawGrid(ctx, pad, w, h, 4, 4);
+
+    // 2σ band (95.5%)
+    ctx.fillStyle = 'rgba(99,102,241,0.08)';
+    ctx.beginPath();
+    for (var d = 0; d <= days; d++) ctx.lineTo(toX(d), toY(upper2[d]));
+    for (var d = days; d >= 0; d--) ctx.lineTo(toX(d), toY(lower2[d]));
+    ctx.closePath(); ctx.fill();
+
+    // 1σ band (68.3%)
+    ctx.fillStyle = 'rgba(99,102,241,0.18)';
+    ctx.beginPath();
+    for (var d = 0; d <= days; d++) ctx.lineTo(toX(d), toY(upper1[d]));
+    for (var d = days; d >= 0; d--) ctx.lineTo(toX(d), toY(lower1[d]));
+    ctx.closePath(); ctx.fill();
+
+    // 2σ border lines
+    ctx.strokeStyle = 'rgba(99,102,241,0.25)'; ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    for (var d = 0; d <= days; d++) { d === 0 ? ctx.moveTo(toX(d), toY(upper2[d])) : ctx.lineTo(toX(d), toY(upper2[d])); }
+    ctx.stroke();
+    ctx.beginPath();
+    for (var d = 0; d <= days; d++) { d === 0 ? ctx.moveTo(toX(d), toY(lower2[d])) : ctx.lineTo(toX(d), toY(lower2[d])); }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 1σ border lines
+    ctx.strokeStyle = 'rgba(99,102,241,0.4)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (var d = 0; d <= days; d++) { d === 0 ? ctx.moveTo(toX(d), toY(upper1[d])) : ctx.lineTo(toX(d), toY(upper1[d])); }
+    ctx.stroke();
+    ctx.beginPath();
+    for (var d = 0; d <= days; d++) { d === 0 ? ctx.moveTo(toX(d), toY(lower1[d])) : ctx.lineTo(toX(d), toY(lower1[d])); }
+    ctx.stroke();
+
+    // Median line
+    ctx.strokeStyle = 'rgba(78,205,196,0.9)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var d = 0; d <= days; d++) { d === 0 ? ctx.moveTo(toX(d), toY(median[d])) : ctx.lineTo(toX(d), toY(median[d])); }
+    ctx.stroke();
+
+    // Strike lines
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = 'rgba(255,107,107,0.6)'; ctx.lineWidth = 1.5;
+    var drawnK = {};
+    for (var i = 0; i < legs.length; i++) {
+      var K = legs[i].K;
+      if (drawnK[K]) continue;
+      drawnK[K] = true;
+      var ky = toY(K);
+      if (ky >= pad.top && ky <= h - pad.bottom) {
+        ctx.beginPath(); ctx.moveTo(pad.left, ky); ctx.lineTo(w - pad.right, ky); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,107,107,0.8)'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'right';
+        ctx.fillText('K=' + K.toFixed(0), w - pad.right - 4, ky - 4);
+      }
+    }
+    ctx.setLineDash([]);
+
+    // Spot dot at day 0
+    ctx.fillStyle = '#ffd93d';
+    ctx.beginPath(); ctx.arc(toX(0), toY(p.S), 5, 0, 2 * Math.PI); ctx.fill();
+
+    // Labels at expiry — right side
+    ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(99,102,241,0.7)';
+    var rx = w - pad.right - 4;
+    ctx.fillText('+2\u03C3 ' + upper2[days].toFixed(0), rx, toY(upper2[days]) - 4);
+    ctx.fillText('+1\u03C3 ' + upper1[days].toFixed(0), rx, toY(upper1[days]) - 4);
+    ctx.fillText('-1\u03C3 ' + lower1[days].toFixed(0), rx, toY(lower1[days]) + 12);
+    ctx.fillText('-2\u03C3 ' + lower2[days].toFixed(0), rx, toY(lower2[days]) + 12);
+
+    // X axis (days)
+    ctx.fillStyle = '#444'; ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'center';
+    var xTicks = Math.min(4, days);
+    for (var i = 0; i <= xTicks; i++) {
+      var dd = Math.round(days * i / xTicks);
+      ctx.fillText(dd + 'd', toX(dd), h - pad.bottom + 14);
+    }
+    // Y axis (price)
+    ctx.textAlign = 'right';
+    for (var i = 0; i <= 4; i++) {
+      var v = yMin + (yMax - yMin) * i / 4;
+      ctx.fillText(v.toFixed(0), pad.left - 6, toY(v) + 3);
+    }
+
+    // Axis titles
+    ctx.fillStyle = '#555'; ctx.textAlign = 'center';
+    ctx.fillText('Days to Expiry', pad.left + pw / 2, h - 4);
+
+    // Legend
+    ctx.font = '9px Inter, sans-serif'; ctx.textAlign = 'left';
+    var lx = pad.left + 8, ly = pad.top + 12;
+    ctx.fillStyle = 'rgba(99,102,241,0.18)'; ctx.fillRect(lx, ly - 6, 14, 8);
+    ctx.fillStyle = '#444'; ctx.fillText('68% (1\u03C3)', lx + 18, ly);
+    ly += 14;
+    ctx.fillStyle = 'rgba(99,102,241,0.08)'; ctx.fillRect(lx, ly - 6, 14, 8);
+    ctx.fillStyle = '#444'; ctx.fillText('95% (2\u03C3)', lx + 18, ly);
+  }
+
+  /* ================================================================
      SHOW / HIDE
      ================================================================ */
   function show() {
-    document.getElementById('welcome').style.display = 'none';
-    document.getElementById('chat-area').classList.remove('visible');
-    document.getElementById('analysis-panel').classList.remove('visible');
-    document.getElementById('report-panel').classList.remove('visible');
-    document.getElementById('quote-panel').classList.remove('visible');
-    var panels = ['kline-panel', 'databento-panel', 'corr-panel', 'calendar-panel', 'groupchat-panel'];
-    panels.forEach(function (id) { var p = document.getElementById(id); if (p) p.classList.remove('visible'); });
+    hideAllPanels();
     el('bscalc-panel').classList.add('visible');
     calculate();
     setTimeout(function () { drawChart(); }, 50);

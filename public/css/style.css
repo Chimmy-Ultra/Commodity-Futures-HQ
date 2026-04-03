@@ -2874,9 +2874,10 @@ body {
 .corr-table th {
   padding: 8px 10px; font-weight: 600; color: var(--text-muted); font-size: 11px;
   text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;
-  position: sticky; background: var(--bg);
+  position: sticky; background: #f5f3ff;
 }
 .corr-table thead th { top: 0; z-index: 2; border-bottom: 2px solid var(--border); }
+.corr-table thead th:first-child { left: 0; z-index: 3; }
 .corr-table tbody th { left: 0; z-index: 1; text-align: right; border-right: 2px solid var(--border); }
 .corr-table td {
   padding: 8px 10px; text-align: center; font-size: 12px; font-weight: 500;
@@ -3090,8 +3091,8 @@ body {
   border-right: 1px solid var(--border);
 }
 .bscalc-charts-col {
-  flex: 1; display: flex; flex-direction: column; gap: 12px;
-  padding: 16px; align-items: center;
+  flex: 1; display: flex; flex-direction: row; flex-wrap: wrap; gap: 14px;
+  padding: 16px; align-items: flex-start;
 }
 
 /* Input sections */
@@ -3153,16 +3154,55 @@ body {
 
 /* Chart cells */
 .bscalc-chart-cell {
-  background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
-  padding: 8px; overflow: hidden;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-inset), 0 8px 32px rgba(99,102,241,0.08), 0 2px 8px rgba(0,0,0,0.04);
+  border-radius: 16px;
+  padding: 12px; overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
 }
+.bscalc-chart-cell:hover {
+  box-shadow: var(--glass-inset), 0 12px 40px rgba(99,102,241,0.14), 0 4px 12px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
+}
+.bscalc-charts-col .bscalc-chart-cell { flex: 1 1 calc(50% - 7px); min-width: 0; }
 .bscalc-chart-title {
   font-size: 11px; font-weight: 700; color: var(--text-muted);
-  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; padding-left: 4px;
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; padding-left: 4px;
 }
 .bscalc-charts-col .bscalc-chart-cell canvas { display: block; }
-#bs-canvas-payoff { width: 250px; height: 250px; }
-#bs-canvas-heatmap { width: 310px; height: 250px; }
+#bs-canvas-payoff { width: 100%; height: 200px; }
+#bs-canvas-heatmap { width: 100%; height: 200px; }
+#bs-canvas-probcone { width: 100%; height: 200px; }
+
+/* Risk / Reward card */
+.bs-rr-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; padding: 4px 0;
+}
+.bs-rr-item {
+  background: var(--bg); border-radius: 10px;
+  padding: 10px 12px; border: 1px solid var(--border);
+}
+.bs-rr-wide { grid-column: 1 / -1; }
+.bs-rr-label {
+  font-size: 10px; font-weight: 600; color: var(--text-hint);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+}
+.bs-rr-value {
+  font-size: 16px; font-weight: 700; color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+}
+.bs-rr-profit .bs-rr-value { color: #4ecdc4; }
+.bs-rr-loss .bs-rr-value { color: #ff6b6b; }
+.bs-rr-bar-wrap {
+  display: flex; height: 8px; border-radius: 4px; overflow: hidden;
+  margin: 6px 0 4px; background: var(--border);
+}
+.bs-rr-bar-profit { background: #4ecdc4; transition: width 0.3s; }
+.bs-rr-bar-loss { background: #ff6b6b; transition: width 0.3s; }
 
 /* Greeks charts — full width below body */
 .bscalc-greeks-charts { padding: 0 16px 16px; }
@@ -3212,6 +3252,8 @@ body {
 @media (max-width: 768px) {
   .bscalc-body { flex-direction: column; }
   .bscalc-inputs-col { width: 100%; min-width: 0; border-right: none; border-bottom: 1px solid var(--border); }
+  .bscalc-charts-col { flex-direction: column; }
+  .bscalc-charts-col .bscalc-chart-cell { flex: 1 1 100%; }
   .bscalc-results-banner { flex-direction: column; }
   .bscalc-greeks-strip { flex-wrap: wrap; }
   .bscalc-greek-card { min-width: 60px; }

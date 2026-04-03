@@ -197,19 +197,7 @@ var KlineManager = (function () {
   }
 
   function show() {
-    // Hide other panels
-    document.getElementById('welcome').style.display = 'none';
-    var chatArea = document.getElementById('chat-area');
-    if (chatArea) chatArea.classList.remove('visible');
-    var analysisPanel = document.getElementById('analysis-panel');
-    if (analysisPanel) analysisPanel.classList.remove('visible');
-    var reportPanel = document.getElementById('report-panel');
-    if (reportPanel) reportPanel.classList.remove('visible');
-    var quotePanel = document.getElementById('quote-panel');
-    if (quotePanel) quotePanel.classList.remove('visible');
-    var databentoPanel = document.getElementById('databento-panel');
-    if (databentoPanel) databentoPanel.classList.remove('visible');
-
+    hideAllPanels();
     var panel = document.getElementById('kline-panel');
     if (panel) panel.classList.add('visible');
 
