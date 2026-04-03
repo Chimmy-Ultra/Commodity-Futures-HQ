@@ -398,6 +398,10 @@ body {
 .quote-panel.visible {
   display: block;
 }
+
+/* Workflow Editor Panel */
+.workflow-panel { flex: 1; display: none; flex-direction: column; overflow: hidden; background: rgba(245,243,255,0.4); }
+.workflow-panel.visible { display: flex; }
 .quote-header {
   display: flex;
   justify-content: space-between;

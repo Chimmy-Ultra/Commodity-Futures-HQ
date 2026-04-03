@@ -24,6 +24,7 @@
       'nav-reports': function () { AnalysisManager.showReportPanel(); },
       'nav-databento': function () { DatabentoManager.show(); },
       'nav-bscalc': function () { BSCalcManager.show(); },
+      'nav-workflow': function () { WorkflowManager.show(); },
     };
     Object.keys(navMap).forEach(function (id) {
       var el = document.getElementById(id);
@@ -148,7 +149,7 @@
     document.getElementById('welcome').style.display = 'none';
     ['chat-area', 'analysis-panel', 'report-panel', 'quote-panel',
      'kline-panel', 'databento-panel', 'corr-panel', 'calendar-panel',
-     'groupchat-panel', 'bscalc-panel'].forEach(function (id) {
+     'groupchat-panel', 'bscalc-panel', 'workflow-panel'].forEach(function (id) {
       var p = document.getElementById(id);
       if (p) p.classList.remove('visible');
     });

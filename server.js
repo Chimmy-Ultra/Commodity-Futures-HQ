@@ -6,7 +6,7 @@ const { LIVE_MARKETS } = require('./config/markets');
 const { fetchYahooQuotes, getCachedQuotes, setCachedQuotes, fetchYahooKline } = require('./lib/yahoo');
 const { queryDatabento } = require('./lib/databento');
 const { COMMODITY_LABELS } = require('./config/commodities');
-const { runAnalysis } = require('./lib/orchestrator');
+const { runAnalysis, runWorkflowDAG } = require('./lib/orchestrator');
 const { callClaude, streamClaude, formatChatHistory } = require('./lib/claude-backend');
 const { AGENT_MODELS } = require('./config/models');
 const { getCorrelationMatrix } = require('./lib/correlation');
@@ -221,6 +221,42 @@ app.post('/api/analyze', rateLimit(60000, 5), async (req, res) => {
   } catch (error) {
     console.error('Analysis Error:', error.message);
     send('error', { message: error.message });
+  }
+
+  res.end();
+});
+
+// --- Workflow DAG Execution ---
+
+app.post('/api/workflow/run', async (req, res) => {
+  var { nodes, edges, commodity, question } = req.body;
+  if (!nodes || !nodes.length) {
+    return res.status(400).json({ error: 'Empty workflow' });
+  }
+  if (nodes.length > 20) {
+    return res.status(400).json({ error: 'Workflow too large (max 20 nodes)' });
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  });
+
+  var send = function (event, data) {
+    res.write('event: ' + event + '\ndata: ' + JSON.stringify(data) + '\n\n');
+  };
+
+  try {
+    await runWorkflowDAG({
+      nodes: nodes,
+      edges: edges,
+      commodity: commodity,
+      question: question,
+      onEvent: send,
+    });
+  } catch (err) {
+    send('error', { message: err.message });
   }
 
   res.end();

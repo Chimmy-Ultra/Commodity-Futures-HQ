@@ -12,8 +12,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/python.min.js"></script>
 <script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow@0.0.60/dist/drawflow.min.css">
+<script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow@0.0.60/dist/drawflow.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/workflow.css">
 </head>
 <body>
 
@@ -46,6 +49,7 @@
       <div class="sidebar-nav-item" id="nav-reports">&#x1F4CB; Reports</div>
       <div class="sidebar-nav-item" id="nav-databento">&#x1F50D; Databento</div>
       <div class="sidebar-nav-item" id="nav-bscalc">&#x1F4D0; Options Calc</div>
+      <div class="sidebar-nav-item" id="nav-workflow">&#x1F9E9; Workflow</div>
     </div>
 
     <!-- Live Ticker -->
@@ -493,6 +497,33 @@
       <div class="quote-grid" id="quote-grid"></div>
     </div>
 
+    <!-- Workflow Editor Panel -->
+    <div class="workflow-panel" id="workflow-panel">
+      <div class="wf-header">
+        <div class="wf-header-left">
+          <div class="wf-title">Workflow Editor</div>
+          <div class="wf-subtitle" id="wf-subtitle">Visual Analysis Pipeline Designer</div>
+        </div>
+        <div class="wf-header-right">
+          <button class="wf-run-btn" id="wf-run" disabled>&#x25B6; Run Pipeline</button>
+          <div class="wf-zoom-controls">
+            <button class="wf-zoom-btn" id="wf-zoom-out" title="Zoom out">&#x2212;</button>
+            <button class="wf-zoom-btn" id="wf-zoom-reset" title="Reset zoom">&#x2299;</button>
+            <button class="wf-zoom-btn" id="wf-zoom-in" title="Zoom in">&#x2B;</button>
+          </div>
+          <button class="btn-icon" id="wf-close" title="Close">&#x2715;</button>
+        </div>
+      </div>
+      <div class="wf-tabs" id="wf-tabs"></div>
+      <div class="wf-body">
+        <div class="wf-palette" id="wf-palette"></div>
+        <div class="wf-canvas-wrap">
+          <div id="wf-canvas"></div>
+        </div>
+      </div>
+      <div class="wf-status" id="wf-status"></div>
+    </div>
+
     <!-- Chat Area -->
     <div class="chat-area" id="chat-area">
       <div class="chat-header-bar" id="chat-header-bar">
@@ -796,6 +827,7 @@
 <script src="js/calendar.js"></script>
 <script src="js/group-chat.js"></script>
 <script src="js/bscalc.js"></script>
+<script src="js/workflow.js"></script>
 <script src="js/main.js"></script>
 <script src="js/liquid-glass.js"></script>
 </body>
