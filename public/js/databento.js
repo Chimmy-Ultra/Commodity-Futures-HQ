@@ -164,19 +164,7 @@ var DatabentoManager = (function () {
   }
 
   function show() {
-    // Hide other panels
-    document.getElementById('welcome').style.display = 'none';
-    var chatArea = document.getElementById('chat-area');
-    if (chatArea) chatArea.classList.remove('visible');
-    var analysisPanel = document.getElementById('analysis-panel');
-    if (analysisPanel) analysisPanel.classList.remove('visible');
-    var reportPanel = document.getElementById('report-panel');
-    if (reportPanel) reportPanel.classList.remove('visible');
-    var quotePanel = document.getElementById('quote-panel');
-    if (quotePanel) quotePanel.classList.remove('visible');
-    var klinePanel = document.getElementById('kline-panel');
-    if (klinePanel) klinePanel.classList.remove('visible');
-
+    hideAllPanels();
     var panel = document.getElementById('databento-panel');
     if (panel) panel.classList.add('visible');
 

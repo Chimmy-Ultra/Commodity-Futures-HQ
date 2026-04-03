@@ -143,25 +143,21 @@
     return days + 'd ago';
   }
 
+  // --- Hide all content panels (centralized) ---
+  function hideAllPanels() {
+    document.getElementById('welcome').style.display = 'none';
+    ['chat-area', 'analysis-panel', 'report-panel', 'quote-panel',
+     'kline-panel', 'databento-panel', 'corr-panel', 'calendar-panel',
+     'groupchat-panel', 'bscalc-panel'].forEach(function (id) {
+      var p = document.getElementById(id);
+      if (p) p.classList.remove('visible');
+    });
+  }
+
   // --- Show home page ---
   function showHome() {
     selectedCharId = null;
-    document.getElementById('chat-area').classList.remove('visible');
-    document.getElementById('analysis-panel').classList.remove('visible');
-    document.getElementById('report-panel').classList.remove('visible');
-    document.getElementById('quote-panel').classList.remove('visible');
-    var kp = document.getElementById('kline-panel');
-    if (kp) kp.classList.remove('visible');
-    var dp = document.getElementById('databento-panel');
-    if (dp) dp.classList.remove('visible');
-    var cp = document.getElementById('corr-panel');
-    if (cp) cp.classList.remove('visible');
-    var calp = document.getElementById('calendar-panel');
-    if (calp) calp.classList.remove('visible');
-    var gcp = document.getElementById('groupchat-panel');
-    if (gcp) gcp.classList.remove('visible');
-    var bsp = document.getElementById('bscalc-panel');
-    if (bsp) bsp.classList.remove('visible');
+    hideAllPanels();
     document.getElementById('welcome').style.display = '';
     buildHomeRecentReports();
     document.getElementById('topbar-title').textContent = 'Commodity HQ';
@@ -172,19 +168,7 @@
   function selectChar(c) {
     selectedCharId = c.id;
     ChatManager.open(c);
-    document.getElementById('welcome').style.display = 'none';
-    var kp = document.getElementById('kline-panel');
-    if (kp) kp.classList.remove('visible');
-    var dp = document.getElementById('databento-panel');
-    if (dp) dp.classList.remove('visible');
-    var cp2 = document.getElementById('corr-panel');
-    if (cp2) cp2.classList.remove('visible');
-    var calp2 = document.getElementById('calendar-panel');
-    if (calp2) calp2.classList.remove('visible');
-    var gcp2 = document.getElementById('groupchat-panel');
-    if (gcp2) gcp2.classList.remove('visible');
-    var bsp2 = document.getElementById('bscalc-panel');
-    if (bsp2) bsp2.classList.remove('visible');
+    hideAllPanels();
     document.getElementById('topbar-title').textContent = c.name;
     document.getElementById('topbar-role').textContent = c.role;
     if (isMobile()) closeSidebar();
@@ -275,6 +259,7 @@
     window.addEventListener('resize', handleResize);
   });
 
-  // Export avatarImg for other modules
+  // Export shared utilities for other modules
   window.avatarImg = avatarImg;
+  window.hideAllPanels = hideAllPanels;
 })();

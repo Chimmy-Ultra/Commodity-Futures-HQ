@@ -89,10 +89,7 @@ var AnalysisManager = (function () {
     el('analysis-report').innerHTML = '<div class="report-content">' + safeMd(r.markdown) + '</div>';
   }
   function showReportPanel() {
-    el('welcome').style.display = 'none';
-    el('chat-area').classList.remove('visible');
-    el('quote-panel').classList.remove('visible');
-    el('analysis-panel').classList.remove('visible');
+    hideAllPanels();
     el('report-panel').classList.add('visible');
     renderReportList();
   }
@@ -101,10 +98,7 @@ var AnalysisManager = (function () {
   }
 
   function show() {
-    el('welcome').style.display = 'none';
-    el('chat-area').classList.remove('visible');
-    el('quote-panel').classList.remove('visible');
-    el('report-panel').classList.remove('visible');
+    hideAllPanels();
     el('analysis-panel').classList.add('visible');
   }
 

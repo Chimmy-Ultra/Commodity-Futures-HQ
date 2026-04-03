@@ -97,20 +97,7 @@ var CorrelationManager = (function () {
   }
 
   function show() {
-    document.getElementById('welcome').style.display = 'none';
-    document.getElementById('chat-area').classList.remove('visible');
-    document.getElementById('analysis-panel').classList.remove('visible');
-    document.getElementById('report-panel').classList.remove('visible');
-    document.getElementById('quote-panel').classList.remove('visible');
-    var kp = document.getElementById('kline-panel');
-    if (kp) kp.classList.remove('visible');
-    var dp = document.getElementById('databento-panel');
-    if (dp) dp.classList.remove('visible');
-    var gcp = document.getElementById('groupchat-panel');
-    if (gcp) gcp.classList.remove('visible');
-    var calp = document.getElementById('calendar-panel');
-    if (calp) calp.classList.remove('visible');
-
+    hideAllPanels();
     el('corr-panel').classList.add('visible');
     fetchMatrix();
   }

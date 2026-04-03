@@ -208,20 +208,7 @@ var GroupChatManager = (function () {
   }
 
   function show() {
-    document.getElementById('welcome').style.display = 'none';
-    document.getElementById('chat-area').classList.remove('visible');
-    document.getElementById('analysis-panel').classList.remove('visible');
-    document.getElementById('report-panel').classList.remove('visible');
-    document.getElementById('quote-panel').classList.remove('visible');
-    var kp = document.getElementById('kline-panel');
-    if (kp) kp.classList.remove('visible');
-    var dp = document.getElementById('databento-panel');
-    if (dp) dp.classList.remove('visible');
-    var cp = document.getElementById('corr-panel');
-    if (cp) cp.classList.remove('visible');
-    var calp = document.getElementById('calendar-panel');
-    if (calp) calp.classList.remove('visible');
-
+    hideAllPanels();
     el('groupchat-panel').classList.add('visible');
     if (!el('gc-char-grid').children.length) buildCharGrid();
   }

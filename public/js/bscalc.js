@@ -824,13 +824,7 @@ var BSCalcManager = (function () {
      SHOW / HIDE
      ================================================================ */
   function show() {
-    document.getElementById('welcome').style.display = 'none';
-    document.getElementById('chat-area').classList.remove('visible');
-    document.getElementById('analysis-panel').classList.remove('visible');
-    document.getElementById('report-panel').classList.remove('visible');
-    document.getElementById('quote-panel').classList.remove('visible');
-    var panels = ['kline-panel', 'databento-panel', 'corr-panel', 'calendar-panel', 'groupchat-panel'];
-    panels.forEach(function (id) { var p = document.getElementById(id); if (p) p.classList.remove('visible'); });
+    hideAllPanels();
     el('bscalc-panel').classList.add('visible');
     calculate();
     setTimeout(function () { drawChart(); }, 50);
