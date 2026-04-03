@@ -4,7 +4,7 @@ A virtual office simulator for commodity futures analysis, powered by Claude AI.
 
 以 Claude AI 驅動的虛擬商品期貨分析辦公室。
 
-![Node.js](https://img.shields.io/badge/Node.js-18+-green) ![Claude](https://img.shields.io/badge/AI-Claude%20CLI-orange) ![License](https://img.shields.io/badge/license-MIT-blue)
+![Node.js](https://img.shields.io/badge/Node.js-18+-green) ![Claude](https://img.shields.io/badge/AI-Claude%20CLI%20%7C%20API-6366f1) ![License](https://img.shields.io/badge/license-MIT-blue) ![UI](https://img.shields.io/badge/UI-Liquid%20Glass-a5b4fc)
 
 ---
 
@@ -29,6 +29,8 @@ Commodity HQ 模擬一間商品期貨研究辦公室，裡面有 **19 個 AI 角
 - **Casino Corner | 賭場角落** — Blackjack, Roulette, Slots, Texas Hold'em, Big Two (大老二)
 - **Chat | 聊天** — Individual conversations with Markdown, KaTeX math, code highlighting
 - **Saved Reports | 報告儲存** — Up to 50 analysis reports in localStorage
+- **Liquid Glass UI | 液態玻璃界面** — Animated gradient background with floating orbs, frosted glass panels, indigo accent theme
+- **Dual-mode Backend | 雙模式後端** — Works with Claude CLI (Max subscription, zero API cost) or Anthropic API key (deployable anywhere)
 - **Responsive Design | 響應式設計** — Desktop and mobile
 
 ---
@@ -293,11 +295,13 @@ All games feature humorous flavor dialogue from office characters.
 ## Prerequisites | 前置需求
 
 - **Node.js** 18+
-- **Claude CLI** — installed and authenticated with a **Claude Max subscription**
-  - The app uses `claude -p` (non-interactive, stdin-piped) as the AI backend
-  - Your Claude Max subscription provides the access — **no separate API key needed**
-  - Prompts are sent via stdin, **no temp files** written to disk
-  - [Install Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview)
+- **One of the following AI backends | 以下 AI 後端擇一：**
+
+| Mode 模式 | Requirement 需求 | Cost 費用 | Deployable 可部署 |
+|-----------|-----------------|-----------|-------------------|
+| **CLI** (default) | [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code/overview) installed + **Claude Max subscription** | Included in subscription 訂閱包含 | Local only 僅本機 |
+| **API** | `ANTHROPIC_API_KEY` from [console.anthropic.com](https://console.anthropic.com) | Pay per token 按 token 計費 | Anywhere 任何主機 |
+
 - **Databento API key** (optional) — only needed for historical data queries
 
 ## Quick Start | 快速開始
@@ -331,8 +335,22 @@ Connect your phone to the same WiFi network, then open `http://<your-computer-ip
 
 ```env
 PORT=3000
-# DATABENTO_API_KEY=your_key_here   # Optional: for historical data queries
+
+# ── Claude Backend Mode ──
+# cli  (default) — uses local claude.exe, Claude Max subscription, no API key needed
+# api            — uses Anthropic API, requires ANTHROPIC_API_KEY
+CLAUDE_MODE=cli
+
+# Required only when CLAUDE_MODE=api
+# ANTHROPIC_API_KEY=sk-ant-xxxxxxxx
+
+# Optional: for Databento historical data queries
+# DATABENTO_API_KEY=your_key_here
 ```
+
+> **For other users deploying this project | 其他人部署此專案：**
+> Set `CLAUDE_MODE=api` and provide your `ANTHROPIC_API_KEY`. No Claude Code installation needed.
+> 設定 `CLAUDE_MODE=api` 並填入你的 `ANTHROPIC_API_KEY`，不需要安裝 Claude Code。
 
 ### Model Assignment | 模型分配
 
@@ -347,11 +365,11 @@ Edit `config/models.js` to change which Claude model each character uses:
 | Layer | Technology |
 |-------|-----------|
 | Backend | Node.js + Express |
-| AI | Claude CLI (`claude -p`) via Max subscription |
-| Frontend | Vanilla JS (IIFE modules), CSS custom properties |
+| AI | Claude CLI (`claude -p`) or Anthropic SDK (`@anthropic-ai/sdk`) |
+| Frontend | Vanilla JS (IIFE modules), Liquid Glass CSS (glassmorphism + animated gradient) |
 | Charts | Lightweight Charts (TradingView) |
 | Math | KaTeX |
-| Markdown | marked.js + DOMPurify |
+| Markdown | marked.js + DOMPurify + highlight.js |
 | Avatars | DiceBear Adventurer + custom photos |
 
 ---
@@ -368,6 +386,7 @@ Edit `config/models.js` to change which Claude model each character uses:
 │   ├── calendar.js            # Economic event definitions + Claude date-fetch prompt
 │   └── synthesizer.js         # Synthesis prompt + kill criteria + output format
 ├── lib/
+│   ├── claude-backend.js      # Dual-mode abstraction (CLI / API switch)
 │   ├── claude-runner.js       # Claude CLI wrapper (claude -p via stdin)
 │   ├── orchestrator.js        # Multi-phase analysis pipeline execution
 │   ├── yahoo.js               # Yahoo Finance data fetcher + caching
@@ -391,7 +410,8 @@ Edit `config/models.js` to change which Claude model each character uses:
 │       ├── roulette.js        # Roulette
 │       ├── slots.js           # Slots
 │       ├── poker.js           # Texas Hold'em
-│       └── bigtwo.js          # Big Two (大老二)
+│       ├── bigtwo.js          # Big Two (大老二)
+│       └── liquid-glass.js    # Mouse parallax animation for background orbs
 └── .env.example
 ```
 
