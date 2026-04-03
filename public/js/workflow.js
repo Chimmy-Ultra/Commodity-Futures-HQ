@@ -67,6 +67,18 @@ var WorkflowManager = (function () {
     }
   };
 
+  // Short English descriptions for each agent
+  var AGENT_DESC = {
+    fx:     'Macro framework: rates, FX, central banks',
+    news:   'Real-time global news & event scanner',
+    wasde:  'USDA supply/demand report specialist',
+    soft:   'Coffee, sugar, cotton fundamentals',
+    energy: 'Crude, natgas, gold & metals fundamentals',
+    cot:    'CFTC positioning & large-trader flows',
+    tech:   'Chart patterns, support/resistance, trends',
+    quant:  'Backtesting & statistical contrarian check',
+  };
+
   // Agent nodes — built from CHARS
   ANALYSIS_AGENTS.forEach(function (id) {
     var c = null;
@@ -82,13 +94,22 @@ var WorkflowManager = (function () {
       avatar: c.avatar, model: c.model, color: c.color,
       inputs: 1, outputs: 1,
       html: function () {
-        var badge = (c.model || 'SONNET').toLowerCase();
-        return '<div class="wf-node"><div class="wf-node-header">' +
+        var defaultModel = (c.model || 'SONNET');
+        var isOpus = defaultModel === 'OPUS';
+        return '<div class="wf-node">' +
+          '<div class="wf-node-header">' +
           '<img src="' + c.avatar + '" class="wf-node-avatar" alt="' + c.name + '">' +
-          '<div class="wf-node-info"><div class="wf-node-name">' + c.name + '</div>' +
-          '<div class="wf-node-role">' + c.role + '</div></div>' +
-          '<span class="wf-node-badge ' + badge + '">' + c.model + '</span>' +
-          '</div></div>';
+          '<div class="wf-node-info">' +
+          '<div class="wf-node-name-row">' +
+          '<span class="wf-node-name">' + c.name + '</span>' +
+          '<select class="wf-model-select" data-agent="' + id + '">' +
+          '<option value="OPUS"' + (isOpus ? ' selected' : '') + '>OPUS</option>' +
+          '<option value="SONNET"' + (!isOpus ? ' selected' : '') + '>SONNET</option>' +
+          '</select></div>' +
+          '<div class="wf-node-role">' + c.role + '</div>' +
+          '</div></div>' +
+          '<div class="wf-node-desc">' + (AGENT_DESC[id] || '') + '</div>' +
+          '</div>';
       }
     };
   });
@@ -248,23 +269,24 @@ var WorkflowManager = (function () {
     var agents = COMMODITY_AGENTS[commodity] || COMMODITY_AGENTS.corn;
     var phase2Agent = agents.find(function (a) { return PHASE_MAP[a] === 2; }) || 'wasde';
 
-    // Layout positions (left to right)
-    var cols = { input: 60, p1: 300, p2: 540, p3: 780, p4: 1020, synth: 1260, report: 1480 };
-    var midY = 200;
+    // Layout positions (left to right, wider spacing for readability)
+    var cols = { input: 50, p1: 300, p2: 560, p3: 820, p4: 1080, synth: 1320, report: 1520 };
+    var midY = 220;
+    var spread = 110; // vertical spread for parallel nodes
 
     // Column 1: Commodity source
     var nInput = addNodeToCanvas('commodity_source', cols.input, midY);
 
     // Column 2: Phase 1 (fx, news)
-    var nFx = addNodeToCanvas('fx', cols.p1, midY - 80);
-    var nNews = addNodeToCanvas('news', cols.p1, midY + 80);
+    var nFx = addNodeToCanvas('fx', cols.p1, midY - spread);
+    var nNews = addNodeToCanvas('news', cols.p1, midY + spread);
 
     // Column 3: Phase 2 (commodity-dependent)
     var nP2 = addNodeToCanvas(phase2Agent, cols.p2, midY);
 
     // Column 4: Phase 3 (cot, tech)
-    var nCot = addNodeToCanvas('cot', cols.p3, midY - 80);
-    var nTech = addNodeToCanvas('tech', cols.p3, midY + 80);
+    var nCot = addNodeToCanvas('cot', cols.p3, midY - spread);
+    var nTech = addNodeToCanvas('tech', cols.p3, midY + spread);
 
     // Column 5: Phase 4 (quant) — skip if not in agent list (e.g. usdjpy)
     var nQuant = null;
@@ -280,7 +302,7 @@ var WorkflowManager = (function () {
     var reportX = nQuant ? cols.report : cols.synth;
     var nReport = addNodeToCanvas('report_output', reportX, midY);
 
-    // === WIRING ===
+    // === WIRING (clean phase-to-phase flow) ===
     // Input → Phase 1
     editor.addConnection(nInput, nFx, 'output_1', 'input_1');
     editor.addConnection(nInput, nNews, 'output_1', 'input_1');
@@ -289,34 +311,19 @@ var WorkflowManager = (function () {
     editor.addConnection(nFx, nP2, 'output_1', 'input_1');
     editor.addConnection(nNews, nP2, 'output_1', 'input_1');
 
-    // Phase 1+2 → Phase 3
-    editor.addConnection(nFx, nCot, 'output_1', 'input_1');
-    editor.addConnection(nNews, nCot, 'output_1', 'input_1');
+    // Phase 2 → Phase 3
     editor.addConnection(nP2, nCot, 'output_1', 'input_1');
-    editor.addConnection(nFx, nTech, 'output_1', 'input_1');
-    editor.addConnection(nNews, nTech, 'output_1', 'input_1');
     editor.addConnection(nP2, nTech, 'output_1', 'input_1');
 
     if (nQuant) {
-      // Phase 1+2+3 → Phase 4
-      editor.addConnection(nFx, nQuant, 'output_1', 'input_1');
-      editor.addConnection(nNews, nQuant, 'output_1', 'input_1');
-      editor.addConnection(nP2, nQuant, 'output_1', 'input_1');
+      // Phase 3 → Phase 4
       editor.addConnection(nCot, nQuant, 'output_1', 'input_1');
       editor.addConnection(nTech, nQuant, 'output_1', 'input_1');
 
-      // All → Synthesizer
-      editor.addConnection(nFx, nSynth, 'output_1', 'input_1');
-      editor.addConnection(nNews, nSynth, 'output_1', 'input_1');
-      editor.addConnection(nP2, nSynth, 'output_1', 'input_1');
-      editor.addConnection(nCot, nSynth, 'output_1', 'input_1');
-      editor.addConnection(nTech, nSynth, 'output_1', 'input_1');
+      // Phase 4 → Synthesizer
       editor.addConnection(nQuant, nSynth, 'output_1', 'input_1');
     } else {
       // No quant → Phase 3 feeds directly to Synth
-      editor.addConnection(nFx, nSynth, 'output_1', 'input_1');
-      editor.addConnection(nNews, nSynth, 'output_1', 'input_1');
-      editor.addConnection(nP2, nSynth, 'output_1', 'input_1');
       editor.addConnection(nCot, nSynth, 'output_1', 'input_1');
       editor.addConnection(nTech, nSynth, 'output_1', 'input_1');
     }
@@ -333,6 +340,15 @@ var WorkflowManager = (function () {
     updateRunButton();
   }
 
+  function resetDefaultPipeline() {
+    var tab = tabs.find(function (t) { return t.id === activeTabId && t.isDefault; });
+    if (!tab) return;
+    tab.data = null;
+    createDefaultPipeline(tab.commodity || 'corn');
+    saveCurrentTab();
+    saveToStorage();
+  }
+
   /* ============================================================
      TAB MANAGEMENT
      ============================================================ */
@@ -345,6 +361,9 @@ var WorkflowManager = (function () {
       var active = tab.id === activeTabId ? ' active' : '';
       html += '<div class="wf-tab' + active + '" data-tab-id="' + tab.id + '">';
       html += '<span class="wf-tab-name">' + tab.name + '</span>';
+      if (tab.isDefault && tab.id === activeTabId) {
+        html += '<button class="wf-tab-reset" data-tab-id="' + tab.id + '" title="Reset to default pipeline">\u21BB</button>';
+      }
       if (!tab.isDefault) {
         html += '<button class="wf-tab-close" data-tab-id="' + tab.id + '" title="Close tab">\u2715</button>';
       }
@@ -356,7 +375,7 @@ var WorkflowManager = (function () {
     // Tab click handlers
     container.querySelectorAll('.wf-tab').forEach(function (tabEl) {
       tabEl.addEventListener('click', function (e) {
-        if (e.target.classList.contains('wf-tab-close')) return;
+        if (e.target.classList.contains('wf-tab-close') || e.target.classList.contains('wf-tab-reset')) return;
         switchTab(tabEl.dataset.tabId);
       });
     });
@@ -366,6 +385,14 @@ var WorkflowManager = (function () {
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
         deleteTab(btn.dataset.tabId);
+      });
+    });
+
+    // Reset default tab handler
+    container.querySelectorAll('.wf-tab-reset').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        resetDefaultPipeline();
       });
     });
 
@@ -496,6 +523,8 @@ var WorkflowManager = (function () {
         if (sel) nodeData.commodity = sel.value;
         var inp = domNode.querySelector('.wf-question-input');
         if (inp) nodeData.question = inp.value;
+        var modelSel = domNode.querySelector('.wf-model-select');
+        if (modelSel) nodeData.model = modelSel.value;
       }
       nodes.push(nodeData);
 
