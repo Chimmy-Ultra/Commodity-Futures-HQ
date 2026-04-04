@@ -28,6 +28,8 @@ Commodity HQ 模擬一間商品期貨研究辦公室，裡面有 **19 個 AI 角
 - **Databento Integration | Databento 整合** — Historical OHLCV data queries (optional API key)
 - **Casino Corner | 賭場角落** — Blackjack, Roulette, Slots, Texas Hold'em, Big Two (大老二)
 - **Chat | 聊天** — Individual conversations with Markdown, KaTeX math, code highlighting
+- **Visual Workflow Editor | 視覺化工作流程編輯器** — LabVIEW-style drag-and-drop pipeline designer with Drawflow, build custom agent pipelines
+- **Agent Response Viewer | Agent 回覆檢視器** — Click any completed agent node to inspect its raw response in a modal
 - **Saved Reports | 報告儲存** — Up to 50 analysis reports in localStorage
 - **Liquid Glass UI | 液態玻璃界面** — Animated gradient background with floating orbs, frosted glass panels, indigo accent theme
 - **Dual-mode Backend | 雙模式後端** — Works with Claude CLI (Max subscription, zero API cost) or Anthropic API key (deployable anywhere)
@@ -235,6 +237,49 @@ The pipeline streams real-time progress to the frontend via Server-Sent Events:
 
 ---
 
+## Visual Workflow Editor | 視覺化工作流程編輯器
+
+A LabVIEW-style node-based pipeline designer that lets you build custom analysis workflows by dragging agent blocks onto a canvas and connecting them with wires.
+
+LabVIEW 風格的節點式 pipeline 設計器，可將 agent 方塊拖到畫布上，用連接線組合自訂分析流程。
+
+### Node Types | 節點類型
+
+| Type | Description | 說明 |
+|------|-------------|------|
+| **Commodity Source** | Input node with commodity dropdown (12 commodities) | 品種選擇輸入 |
+| **Question Input** | Free-form text input for custom questions | 自由輸入研究問題 |
+| **Agent Nodes** | All 19 characters available as pipeline nodes | 全部 19 個角色都可作為節點 |
+| **Synthesizer** | Calls Claude to merge multiple agent outputs into one report | 呼叫 Claude 合併多個 agent 結果 |
+| **Report Output** | Terminal node that assembles inbound results into a viewable report | 組合上游結果為報告 |
+
+### Pipeline Topologies | 流程拓撲
+
+| Topology | Example | Result |
+|----------|---------|--------|
+| **Fan-out** | Commodity → [Nina, Raj] → Report | Report shows both agents' results with section headers |
+| **Serial chain** | Commodity → Nina → Luna → Report | Each agent gets previous agent's output as context; report shows final agent only |
+| **With Synthesizer** | Commodity → [agents] → Synthesizer → Report | Claude synthesizes all results into a unified report |
+| **Direct** | Commodity → single agent → Report | Agent's raw response becomes the report |
+
+### Agent Response Viewer | Agent 回覆檢視器
+
+After a pipeline run, click any completed (green) agent node to view its full raw response in a glass-morphism modal. This enables traceability when using serial pipelines where intermediate outputs are not visible in the final report.
+
+流程跑完後，點擊任何完成狀態（綠色）的 agent 節點，可在彈窗中查看該 agent 的完整原始回覆。串聯 pipeline 時，中間 agent 的輸出不會出現在最終報告裡，這個功能讓你可以追溯每一步的分析內容。
+
+### Features | 功能特色
+
+- **Drag-and-drop** palette with all 19 characters organized by role
+- **Tab system** — save multiple workflows, browser-style tab switching
+- **DAG validation** — cycle detection, connectivity checks, max 20 nodes
+- **Parallel execution** — agents at the same topological level run concurrently
+- **Node state animation** — pending (grey) → running (pulse) → done (green) / error (red)
+- **SSE keepalive** — 25-second heartbeat prevents connection drop on long pipelines
+- **Model selector** — override Opus/Sonnet per node
+
+---
+
 ## Group Discussion | 群組討論室
 
 Select 2–5 characters and provide a topic. Characters respond **sequentially**, each seeing all prior speakers' responses, creating a context-aware roundtable discussion. Streamed via SSE.
@@ -367,6 +412,7 @@ Edit `config/models.js` to change which Claude model each character uses:
 | Backend | Node.js + Express |
 | AI | Claude CLI (`claude -p`) or Anthropic SDK (`@anthropic-ai/sdk`) |
 | Frontend | Vanilla JS (IIFE modules), Liquid Glass CSS (glassmorphism + animated gradient) |
+| Workflow | Drawflow (node-based visual editor) |
 | Charts | Lightweight Charts (TradingView) |
 | Math | KaTeX |
 | Markdown | marked.js + DOMPurify + highlight.js |
@@ -394,7 +440,9 @@ Edit `config/models.js` to change which Claude model each character uses:
 │   └── correlation.js         # Pearson correlation matrix computation
 ├── public/
 │   ├── index.html
-│   ├── css/style.css
+│   ├── css/
+│   │   ├── style.css            # Global styles + Liquid Glass theme
+│   │   └── workflow.css         # Workflow editor + agent response modal
 │   └── js/
 │       ├── characters.js      # 19 character definitions + avatars
 │       ├── main.js            # Home page, sidebar, navigation
@@ -405,6 +453,7 @@ Edit `config/models.js` to change which Claude model each character uses:
 │       ├── kline.js           # Candlestick chart rendering
 │       ├── correlation.js     # Correlation matrix heatmap
 │       ├── calendar.js        # Economic calendar panel
+│       ├── workflow.js         # Visual workflow editor (Drawflow + DAG execution)
 │       ├── databento.js       # Databento query panel
 │       ├── blackjack.js       # Blackjack
 │       ├── roulette.js        # Roulette
