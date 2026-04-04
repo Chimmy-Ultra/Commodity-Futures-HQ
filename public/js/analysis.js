@@ -382,5 +382,5 @@ var AnalysisManager = (function () {
     });
   });
 
-  return { start: start, hide: hide, showReportPanel: showReportPanel, hideReportPanel: hideReportPanel };
+  return { start: start, hide: hide, showReportPanel: showReportPanel, hideReportPanel: hideReportPanel, saveReport: saveReport };
 })();

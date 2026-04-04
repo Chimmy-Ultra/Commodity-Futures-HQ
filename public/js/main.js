@@ -168,8 +168,8 @@
   // --- Character selection ---
   function selectChar(c) {
     selectedCharId = c.id;
-    ChatManager.open(c);
     hideAllPanels();
+    ChatManager.open(c);
     document.getElementById('topbar-title').textContent = c.name;
     document.getElementById('topbar-role').textContent = c.role;
     if (isMobile()) closeSidebar();

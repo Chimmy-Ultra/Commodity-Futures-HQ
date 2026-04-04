@@ -35,6 +35,7 @@ var WorkflowManager = (function () {
   var activeTabId = null;
   var isRunning = false;
   var initialized = false;
+  var lastReport = null; // { title, markdown } — most recent synthesis result
 
   function el(id) { return document.getElementById(id); }
 
@@ -70,8 +71,8 @@ var WorkflowManager = (function () {
     label: 'Question', icon: '\u2753', bio: 'Ask a custom research question', category: 'input',
     inputs: 0, outputs: 1,
     html: function () {
-      return '<div class="wf-node"><div class="wf-node-icon">\u2753</div>' +
-        '<input type="text" class="wf-question-input" placeholder="Enter question..."></div>';
+      return '<div class="wf-node wf-node-question"><div class="wf-node-icon">\u2753</div>' +
+        '<textarea class="wf-question-input" placeholder="Enter your research question..." rows="4"></textarea></div>';
     }
   };
 
@@ -747,15 +748,46 @@ var WorkflowManager = (function () {
     } else if (event === 'synthesis') {
       dag_findNodesByType('synthesizer').forEach(function (id) { setNodeState(id, 'done'); });
       dag_findNodesByType('report_output').forEach(function (id) { setNodeState(id, 'done'); });
-      if (status) status.textContent = '\u2705 Pipeline complete \u2014 Report generated';
-      // Save report using AnalysisManager if available
+      // Save report
+      var reportTitle = 'Workflow Report \u2014 ' + new Date().toLocaleString();
+      lastReport = { title: reportTitle, markdown: data.report, date: new Date().toISOString() };
       if (data.report && typeof AnalysisManager !== 'undefined' && AnalysisManager.saveReport) {
-        AnalysisManager.saveReport(data.report);
+        AnalysisManager.saveReport(reportTitle, data.report);
+      }
+      if (status) {
+        status.innerHTML = '\u2705 Pipeline complete &mdash; Report generated &nbsp;' +
+          '<a href="#" class="wf-view-report-btn" id="wf-view-report-link">View Report \u2192</a>';
+        var link = document.getElementById('wf-view-report-link');
+        if (link) link.addEventListener('click', function (e) { e.preventDefault(); viewLastReport(); });
       }
     } else if (event === 'complete') {
-      if (status) status.textContent = '\u2705 Pipeline execution complete';
+      /* status already set by synthesis event */
     } else if (event === 'error') {
       if (status) status.textContent = '\u274C ' + (data.message || 'Pipeline error');
+    }
+  }
+
+  function viewLastReport() {
+    if (!lastReport || !lastReport.markdown) return;
+    // Switch directly to the analysis panel and render the report
+    if (typeof hideAllPanels === 'function') hideAllPanels();
+    var panel = document.getElementById('analysis-panel');
+    if (panel) panel.classList.add('visible');
+    var titleEl = document.getElementById('analysis-title');
+    if (titleEl) titleEl.textContent = lastReport.title;
+    var subtitleEl = document.getElementById('analysis-subtitle');
+    if (subtitleEl) {
+      var d = new Date(lastReport.date);
+      subtitleEl.textContent = d.toLocaleDateString('zh-TW') + ' ' + d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+    }
+    var agentsEl = document.getElementById('analysis-agents');
+    if (agentsEl) agentsEl.innerHTML = '';
+    var detailEl = document.getElementById('analysis-detail');
+    if (detailEl) { detailEl.innerHTML = ''; detailEl.classList.remove('expanded'); }
+    var reportEl = document.getElementById('analysis-report');
+    if (reportEl) {
+      var safeMd = (typeof marked !== 'undefined') ? marked.parse(lastReport.markdown) : lastReport.markdown.replace(/</g, '&lt;');
+      reportEl.innerHTML = '<div class="report-content">' + safeMd + '</div>';
     }
   }
 
