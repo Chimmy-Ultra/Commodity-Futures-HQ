@@ -211,6 +211,11 @@ app.post('/api/analyze', rateLimit(60000, 5), async (req, res) => {
     res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
   };
 
+  // Keepalive ping every 25s to prevent connection drop during long analysis runs
+  const keepAlive = setInterval(() => {
+    if (!res.writableEnded) res.write(': keepalive\n\n');
+  }, 25000);
+
   try {
     await runAnalysis({
       mode,
@@ -223,6 +228,7 @@ app.post('/api/analyze', rateLimit(60000, 5), async (req, res) => {
     send('error', { message: error.message });
   }
 
+  clearInterval(keepAlive);
   res.end();
 });
 
@@ -244,8 +250,15 @@ app.post('/api/workflow/run', async (req, res) => {
   });
 
   var send = function (event, data) {
-    res.write('event: ' + event + '\ndata: ' + JSON.stringify(data) + '\n\n');
+    var json = JSON.stringify(data);
+    console.log('[SSE-send]', event, 'length=' + json.length);
+    res.write('event: ' + event + '\ndata: ' + json + '\n\n');
   };
+
+  // Keepalive ping every 25s to prevent proxy/browser from closing idle SSE connection
+  var keepAlive = setInterval(function () {
+    if (!res.writableEnded) res.write(': keepalive\n\n');
+  }, 25000);
 
   try {
     await runWorkflowDAG({
@@ -259,6 +272,7 @@ app.post('/api/workflow/run', async (req, res) => {
     send('error', { message: err.message });
   }
 
+  clearInterval(keepAlive);
   res.end();
 });
 
