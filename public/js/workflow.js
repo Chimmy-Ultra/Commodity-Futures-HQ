@@ -5,12 +5,18 @@ var WorkflowManager = (function () {
   var STORAGE_KEY = 'commodity-hq-workflows-v1';
   var ANALYSIS_AGENTS = ['fx', 'news', 'wasde', 'soft', 'energy', 'cot', 'tech', 'quant'];
   var COMMODITY_LIST = [
-    { value: 'corn', label: 'Corn' }, { value: 'soybeans', label: 'Soybeans' },
-    { value: 'wheat', label: 'Wheat' }, { value: 'coffee', label: 'Coffee' },
-    { value: 'sugar', label: 'Sugar' }, { value: 'cotton', label: 'Cotton' },
-    { value: 'natgas', label: 'Nat Gas' }, { value: 'wti', label: 'WTI Crude' },
-    { value: 'gold', label: 'Gold' }, { value: 'silver', label: 'Silver' },
-    { value: 'palladium', label: 'Palladium' }, { value: 'usdjpy', label: 'USD/JPY' },
+    { value: 'corn',      label: 'Corn',      icon: '\uD83C\uDF3D' },
+    { value: 'soybeans',  label: 'Soybeans',  icon: '\uD83E\uDEB4' },
+    { value: 'wheat',     label: 'Wheat',     icon: '\uD83C\uDF3E' },
+    { value: 'coffee',    label: 'Coffee',    icon: '\u2615' },
+    { value: 'sugar',     label: 'Sugar',     icon: '\uD83C\uDF6C' },
+    { value: 'cotton',    label: 'Cotton',    icon: '\uD83E\uDDF5' },
+    { value: 'natgas',    label: 'Nat Gas',   icon: '\uD83D\uDD25' },
+    { value: 'wti',       label: 'WTI Crude', icon: '\uD83D\uDEE2\uFE0F' },
+    { value: 'gold',      label: 'Gold',      icon: '\uD83E\uDD47' },
+    { value: 'silver',    label: 'Silver',    icon: '\uD83E\uDD48' },
+    { value: 'palladium', label: 'Palladium', icon: '\uD83D\uDCAE' },
+    { value: 'usdjpy',    label: 'USD/JPY',   icon: '\uD83D\uDCB1' },
   ];
   // Same mapping as config/commodities.js COMMODITY_AGENTS
   var COMMODITY_AGENTS = {
@@ -47,19 +53,21 @@ var WorkflowManager = (function () {
 
   // Input nodes
   NODE_DEFS.commodity_source = {
-    label: 'Commodity', icon: '\uD83C\uDF3E', category: 'input',
+    label: 'Commodity', icon: '\uD83C\uDF3D', bio: 'Select a commodity as pipeline input', category: 'input',
     inputs: 0, outputs: 1,
     html: function () {
       var opts = COMMODITY_LIST.map(function (c) {
-        return '<option value="' + c.value + '">' + c.label + '</option>';
+        return '<option value="' + c.value + '" data-icon="' + c.icon + '">' + c.icon + ' ' + c.label + '</option>';
       }).join('');
-      return '<div class="wf-node"><div class="wf-node-icon">\uD83C\uDF3E</div>' +
-        '<select class="wf-commodity-select">' + opts + '</select></div>';
+      return '<div class="wf-node wf-node-commodity">' +
+        '<div class="wf-commodity-header"><span class="wf-commodity-icon">' + COMMODITY_LIST[0].icon + '</span>' +
+        '<select class="wf-commodity-select">' + opts + '</select></div>' +
+        '</div>';
     }
   };
 
   NODE_DEFS.question_input = {
-    label: 'Question', icon: '\u2753', category: 'input',
+    label: 'Question', icon: '\u2753', bio: 'Ask a custom research question', category: 'input',
     inputs: 0, outputs: 1,
     html: function () {
       return '<div class="wf-node"><div class="wf-node-icon">\u2753</div>' +
@@ -134,7 +142,7 @@ var WorkflowManager = (function () {
 
   // Synthesizer
   NODE_DEFS.synthesizer = {
-    label: 'Synthesizer', icon: '\uD83E\uDDE0', category: 'output',
+    label: 'Synthesizer', icon: '\uD83E\uDDE0', bio: 'Merge all agent outputs into final report', category: 'output',
     inputs: 1, outputs: 1,
     html: function () {
       return '<div class="wf-node"><div class="wf-node-icon">\uD83E\uDDE0</div>' +
@@ -144,7 +152,7 @@ var WorkflowManager = (function () {
 
   // Report output
   NODE_DEFS.report_output = {
-    label: 'Report', icon: '\uD83D\uDCCB', category: 'output',
+    label: 'Report', icon: '\uD83D\uDCCB', bio: 'Terminal output — saves the final report', category: 'output',
     inputs: 1, outputs: 0,
     html: function () {
       return '<div class="wf-node"><div class="wf-node-icon">\uD83D\uDCCB</div>' +
@@ -257,6 +265,16 @@ var WorkflowManager = (function () {
     editor.on('connectionCreated', function () { autoSave(); updateRunButton(); });
     editor.on('connectionRemoved', function () { autoSave(); updateRunButton(); });
 
+    // Update commodity icon when dropdown changes (delegated)
+    container.addEventListener('change', function (e) {
+      if (e.target && e.target.classList.contains('wf-commodity-select')) {
+        var sel = e.target;
+        var opt = sel.options[sel.selectedIndex];
+        var iconEl = sel.closest('.wf-node-commodity') && sel.closest('.wf-node-commodity').querySelector('.wf-commodity-icon');
+        if (iconEl && opt) iconEl.textContent = opt.dataset.icon || '';
+      }
+    });
+
     // Zoom controls
     var zoomIn = el('wf-zoom-in');
     var zoomOut = el('wf-zoom-out');
@@ -363,10 +381,15 @@ var WorkflowManager = (function () {
     // Synthesizer → Report
     editor.addConnection(nSynth, nReport, 'output_1', 'input_1');
 
-    // Set commodity in the input node dropdown
+    // Set commodity in the input node dropdown + update icon
     setTimeout(function () {
       var sel = document.querySelector('#node-' + nInput + ' .wf-commodity-select');
-      if (sel) sel.value = commodity;
+      if (sel) {
+        sel.value = commodity;
+        var comm = COMMODITY_LIST.find(function (c) { return c.value === commodity; });
+        var iconEl = sel.closest('.wf-node-commodity') && sel.closest('.wf-node-commodity').querySelector('.wf-commodity-icon');
+        if (iconEl && comm) iconEl.textContent = comm.icon;
+      }
     }, 50);
 
     updateRunButton();
