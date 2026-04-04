@@ -9,7 +9,7 @@ var AnalysisManager = (function () {
 
   // Safe markdown rendering with DOMPurify
   function safeMd(t) {
-    var html = safeMd(t);
+    var html = (typeof marked !== 'undefined') ? marked.parse(t || '') : (t || '');
     return typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(html) : html;
   }
 
@@ -382,5 +382,5 @@ var AnalysisManager = (function () {
     });
   });
 
-  return { start: start, hide: hide, showReportPanel: showReportPanel, hideReportPanel: hideReportPanel, saveReport: saveReport };
+  return { start: start, hide: hide, showReportPanel: showReportPanel, hideReportPanel: hideReportPanel, saveReport: saveReport, showReport: viewReport };
 })();

@@ -246,6 +246,51 @@
   box-shadow: var(--glass-inset), 0 0 0 2px rgba(239,68,68,0.15), var(--shadow-md) !important;
 }
 
+/* ============ Agent Response Modal ============ */
+.wf-node-modal {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  align-items: center; justify-content: center;
+}
+.wf-node-modal.open { display: flex; }
+
+.wf-node-modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
+}
+.wf-node-modal-card {
+  position: relative; z-index: 1;
+  width: min(720px, 90vw); max-height: 80vh;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1.5px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-inset), var(--shadow-lg);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.wf-node-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+.wf-node-modal-title {
+  font-size: 15px; font-weight: 700; color: var(--text);
+}
+.wf-node-modal-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-hint); font-size: 16px; padding: 4px 8px;
+  border-radius: 6px; transition: background 0.15s;
+}
+.wf-node-modal-close:hover { background: var(--border); }
+.wf-node-modal-body {
+  padding: 20px; overflow-y: auto; flex: 1;
+  font-size: 14px; line-height: 1.7; color: var(--text);
+}
+
+/* Done 節點游標提示可點擊 */
+.drawflow .drawflow-node.wf-done { cursor: pointer; }
+
 /* ============ Status Bar ============ */
 .wf-status {
   padding: 6px 16px; font-size: 11px; color: var(--text-hint);

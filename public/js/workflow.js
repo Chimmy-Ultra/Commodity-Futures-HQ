@@ -35,7 +35,8 @@ var WorkflowManager = (function () {
   var activeTabId = null;
   var isRunning = false;
   var initialized = false;
-  var lastReport = null; // { title, markdown } — most recent synthesis result
+  var lastReport = null;     // { title, markdown } — most recent synthesis result
+  var nodeResponses = {};    // nodeId → { name, agentId, response } — per-agent raw output
 
   function el(id) { return document.getElementById(id); }
 
@@ -663,6 +664,8 @@ var WorkflowManager = (function () {
     if (!validation.valid) return;
 
     isRunning = true;
+    lastReport = null;     // clear previous report at start of new run
+    nodeResponses = {};    // clear per-agent responses
     updateRunButton();
     var btn = el('wf-run');
     if (btn) btn.classList.add('running');
@@ -677,7 +680,7 @@ var WorkflowManager = (function () {
     // Set all agent/member/synth nodes to pending
     dag.nodes.forEach(function (n) {
       var def = NODE_DEFS[n.type];
-      if ((def && (def.category === 'agent' || def.category === 'team')) || n.type === 'synthesizer') {
+      if ((def && (def.category === 'agent' || def.category === 'team')) || n.type === 'synthesizer' || n.type === 'report_output') {
         setNodeState(n.id, 'pending');
       }
     });
@@ -703,7 +706,15 @@ var WorkflowManager = (function () {
         var result = await reader.read();
         if (result.done) break;
         buffer += decoder.decode(result.value, { stream: true });
+        processSSEBuffer();
+      }
+      // Flush any remaining data in buffer after stream ends
+      if (buffer.trim()) {
+        buffer += '\n\n';
+        processSSEBuffer();
+      }
 
+      function processSSEBuffer() {
         var boundary;
         while ((boundary = buffer.indexOf('\n\n')) !== -1) {
           var block = buffer.substring(0, boundary);
@@ -716,7 +727,12 @@ var WorkflowManager = (function () {
             if (lines[i].indexOf('data: ') === 0) dataStr = lines[i].substring(6);
           }
           if (evt && dataStr) {
-            try { handleRunEvent(evt, JSON.parse(dataStr)); } catch (e) { /* skip */ }
+            try {
+              var parsed = JSON.parse(dataStr);
+              handleRunEvent(evt, parsed);
+            } catch (e) {
+              console.error('[WF-SSE] parse error for event:', evt, e.message);
+            }
           }
         }
       }
@@ -738,21 +754,27 @@ var WorkflowManager = (function () {
       if (status) status.textContent = '\u23F3 ' + (data.name || data.agentId) + ' is analyzing...';
     } else if (event === 'agent_done') {
       setNodeState(data.nodeId, 'done');
+      nodeResponses[data.nodeId] = { name: data.name, agentId: data.agentId, response: data.response };
       if (status) status.textContent = '\u2705 ' + (data.name || data.agentId) + ' complete';
     } else if (event === 'agent_error') {
       setNodeState(data.nodeId, 'error');
       if (status) status.textContent = '\u274C ' + (data.name || data.agentId) + ' failed: ' + (data.error || '');
     } else if (event === 'synthesis_start') {
       dag_findNodesByType('synthesizer').forEach(function (id) { setNodeState(id, 'running'); });
-      if (status) status.textContent = '\u23F3 Synthesizing final report...';
+      dag_findNodesByType('report_output').forEach(function (id) { setNodeState(id, 'running'); });
+      if (status) status.textContent = '\u23F3 Assembling report...';
     } else if (event === 'synthesis') {
-      dag_findNodesByType('synthesizer').forEach(function (id) { setNodeState(id, 'done'); });
-      dag_findNodesByType('report_output').forEach(function (id) { setNodeState(id, 'done'); });
-      // Save report
-      var reportTitle = 'Workflow Report \u2014 ' + new Date().toLocaleString();
-      lastReport = { title: reportTitle, markdown: data.report, date: new Date().toISOString() };
-      if (data.report && typeof AnalysisManager !== 'undefined' && AnalysisManager.saveReport) {
-        AnalysisManager.saveReport(reportTitle, data.report);
+      try {
+        dag_findNodesByType('synthesizer').forEach(function (id) { setNodeState(id, 'done'); });
+        dag_findNodesByType('report_output').forEach(function (id) { setNodeState(id, 'done'); });
+        // Save report
+        var reportTitle = 'Workflow Report \u2014 ' + new Date().toLocaleString();
+        lastReport = { title: reportTitle, markdown: data.report, date: new Date().toISOString() };
+        if (data.report && typeof AnalysisManager !== 'undefined' && AnalysisManager.saveReport) {
+          AnalysisManager.saveReport(reportTitle, data.report);
+        }
+      } catch (synthErr) {
+        console.error('[WF] synthesis save error:', synthErr);
       }
       if (status) {
         status.innerHTML = '\u2705 Pipeline complete &mdash; Report generated &nbsp;' +
@@ -761,7 +783,12 @@ var WorkflowManager = (function () {
         if (link) link.addEventListener('click', function (e) { e.preventDefault(); viewLastReport(); });
       }
     } else if (event === 'complete') {
-      /* status already set by synthesis event */
+      // Auto-show report when pipeline finishes
+      if (lastReport && lastReport.markdown) {
+        setTimeout(function () { viewLastReport(); }, 300);
+      } else {
+        if (status) status.textContent = '\u2705 Pipeline execution complete';
+      }
     } else if (event === 'error') {
       if (status) status.textContent = '\u274C ' + (data.message || 'Pipeline error');
     }
@@ -769,25 +796,9 @@ var WorkflowManager = (function () {
 
   function viewLastReport() {
     if (!lastReport || !lastReport.markdown) return;
-    // Switch directly to the analysis panel and render the report
-    if (typeof hideAllPanels === 'function') hideAllPanels();
-    var panel = document.getElementById('analysis-panel');
-    if (panel) panel.classList.add('visible');
-    var titleEl = document.getElementById('analysis-title');
-    if (titleEl) titleEl.textContent = lastReport.title;
-    var subtitleEl = document.getElementById('analysis-subtitle');
-    if (subtitleEl) {
-      var d = new Date(lastReport.date);
-      subtitleEl.textContent = d.toLocaleDateString('zh-TW') + ' ' + d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-    }
-    var agentsEl = document.getElementById('analysis-agents');
-    if (agentsEl) agentsEl.innerHTML = '';
-    var detailEl = document.getElementById('analysis-detail');
-    if (detailEl) { detailEl.innerHTML = ''; detailEl.classList.remove('expanded'); }
-    var reportEl = document.getElementById('analysis-report');
-    if (reportEl) {
-      var safeMd = (typeof marked !== 'undefined') ? marked.parse(lastReport.markdown) : lastReport.markdown.replace(/</g, '&lt;');
-      reportEl.innerHTML = '<div class="report-content">' + safeMd + '</div>';
+    // Use AnalysisManager to show the report properly (handles panel switching)
+    if (typeof AnalysisManager !== 'undefined') {
+      AnalysisManager.showReport(lastReport);
     }
   }
 
@@ -806,6 +817,26 @@ var WorkflowManager = (function () {
       if (data[id].data.type === type || data[id].name === type) ids.push(parseInt(id));
     });
     return ids;
+  }
+
+  /* ============================================================
+     NODE RESPONSE MODAL
+     ============================================================ */
+  function showNodeModal(data) {
+    var modal = document.getElementById('wf-node-modal');
+    var title = document.getElementById('wf-node-modal-title');
+    var body  = document.getElementById('wf-node-modal-body');
+    if (!modal || !title || !body) return;
+    var html = (typeof marked !== 'undefined') ? marked.parse(data.response || '') : (data.response || '');
+    var safe = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(html) : html;
+    title.textContent = data.name || data.agentId;
+    body.innerHTML = safe;
+    modal.classList.add('open');
+  }
+
+  function hideNodeModal() {
+    var modal = document.getElementById('wf-node-modal');
+    if (modal) modal.classList.remove('open');
   }
 
   /* ============================================================
@@ -845,6 +876,24 @@ var WorkflowManager = (function () {
 
     var runBtn = el('wf-run');
     if (runBtn) runBtn.addEventListener('click', runWorkflow);
+
+    // Agent node click → show raw response modal
+    var canvas = document.getElementById('wf-canvas');
+    if (canvas) {
+      canvas.addEventListener('click', function (e) {
+        var nodeEl = e.target.closest('.drawflow-node.wf-done');
+        if (!nodeEl) return;
+        var nodeId = parseInt(nodeEl.id.replace('node-', ''));
+        var d = nodeResponses[nodeId];
+        if (d) showNodeModal(d);
+      });
+    }
+
+    // Modal close
+    var modalClose    = el('wf-node-modal-close');
+    var modalBackdrop = el('wf-node-modal-backdrop');
+    if (modalClose)    modalClose.addEventListener('click', hideNodeModal);
+    if (modalBackdrop) modalBackdrop.addEventListener('click', hideNodeModal);
   });
 
   return { show: show, hide: hide };

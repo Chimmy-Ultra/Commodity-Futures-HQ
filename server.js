@@ -250,9 +250,7 @@ app.post('/api/workflow/run', async (req, res) => {
   });
 
   var send = function (event, data) {
-    var json = JSON.stringify(data);
-    console.log('[SSE-send]', event, 'length=' + json.length);
-    res.write('event: ' + event + '\ndata: ' + json + '\n\n');
+    res.write('event: ' + event + '\ndata: ' + JSON.stringify(data) + '\n\n');
   };
 
   // Keepalive ping every 25s to prevent proxy/browser from closing idle SSE connection
