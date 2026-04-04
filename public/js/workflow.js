@@ -79,23 +79,17 @@ var WorkflowManager = (function () {
     quant:  'Backtesting & statistical contrarian check',
   };
 
-  // Agent nodes — built from CHARS
-  ANALYSIS_AGENTS.forEach(function (id) {
-    var c = null;
-    // Lookup from CHARS global
-    if (typeof CHARS !== 'undefined') {
-      for (var i = 0; i < CHARS.length; i++) {
-        if (CHARS[i].id === id) { c = CHARS[i]; break; }
-      }
-    }
-    if (!c) return;
-    NODE_DEFS[id] = {
-      label: c.name, role: c.role, icon: '', category: 'agent',
+  // Build a node template for a single character (shared by analysis + team members)
+  function buildCharNodeDef(c, category) {
+    var id = c.id;
+    return {
+      label: c.name, role: c.role, bio: c.bio || '', icon: '', category: category,
       avatar: c.avatar, model: c.model, color: c.color,
       inputs: 1, outputs: 1,
       html: function () {
         var defaultModel = (c.model || 'SONNET');
         var isOpus = defaultModel === 'OPUS';
+        var desc = AGENT_DESC[id] || c.bio || '';
         return '<div class="wf-node">' +
           '<div class="wf-node-header">' +
           '<img src="' + c.avatar + '" class="wf-node-avatar" alt="' + c.name + '">' +
@@ -108,11 +102,35 @@ var WorkflowManager = (function () {
           '</select></div>' +
           '<div class="wf-node-role">' + c.role + '</div>' +
           '</div></div>' +
-          '<div class="wf-node-desc">' + (AGENT_DESC[id] || '') + '</div>' +
+          '<div class="wf-node-desc">' + desc + '</div>' +
           '</div>';
       }
     };
-  });
+  }
+
+  // Palette ordering: analysis agents in pipeline phase order, team members by usefulness
+  var AGENT_ORDER = ['fx', 'news', 'wasde', 'soft', 'energy', 'cot', 'tech', 'quant'];
+  var TEAM_ORDER  = ['risk', 'conspiracy', 'veteran', 'dario', 'sam', 'dev', 'intern', 'slacker', 'luna', 'poker', 'claude'];
+
+  // Register ALL CHARS as nodes
+  if (typeof CHARS !== 'undefined') {
+    CHARS.forEach(function (c) {
+      var cat = ANALYSIS_AGENTS.indexOf(c.id) >= 0 ? 'agent' : 'team';
+      NODE_DEFS[c.id] = buildCharNodeDef(c, cat);
+    });
+  }
+
+  // Keep ordered lists for palette rendering
+  var PALETTE_AGENTS = AGENT_ORDER.filter(function (id) { return NODE_DEFS[id]; });
+  var PALETTE_TEAM   = TEAM_ORDER.filter(function (id) { return NODE_DEFS[id]; });
+  // Catch any chars not in TEAM_ORDER (future additions)
+  if (typeof CHARS !== 'undefined') {
+    CHARS.forEach(function (c) {
+      if (ANALYSIS_AGENTS.indexOf(c.id) < 0 && TEAM_ORDER.indexOf(c.id) < 0) {
+        PALETTE_TEAM.push(c.id);
+      }
+    });
+  }
 
   // Synthesizer
   NODE_DEFS.synthesizer = {
@@ -137,37 +155,51 @@ var WorkflowManager = (function () {
   /* ============================================================
      PALETTE
      ============================================================ */
+  function renderPaletteItem(type) {
+    var def = NODE_DEFS[type];
+    if (!def) return '';
+    var icon = def.avatar
+      ? '<img src="' + def.avatar + '" alt="' + def.label + '">'
+      : '<div class="wf-pi-icon">' + (def.icon || '\u25A0') + '</div>';
+    return '<div class="wf-palette-item" draggable="true" data-node-type="' + type + '">' +
+      icon +
+      '<div class="wf-pi-info">' +
+      '<span class="wf-pi-name">' + def.label + '</span>' +
+      (def.bio ? '<span class="wf-pi-bio">' + def.bio + '</span>' : '') +
+      '</div></div>';
+  }
+
   function buildPalette() {
     var palette = el('wf-palette');
     if (!palette) return;
 
-    var sections = { input: [], agent: [], output: [] };
-    Object.keys(NODE_DEFS).forEach(function (key) {
-      var def = NODE_DEFS[key];
-      if (!sections[def.category]) sections[def.category] = [];
-      sections[def.category].push({ type: key, def: def });
-    });
-
-    var sectionLabels = { input: 'Input', agent: 'Agents', output: 'Output' };
     var html = '';
 
-    ['input', 'agent', 'output'].forEach(function (cat) {
-      html += '<div class="wf-palette-section">';
-      html += '<div class="wf-palette-section-title">' + sectionLabels[cat] + '</div>';
-      sections[cat].forEach(function (item) {
-        var icon;
-        if (item.def.avatar) {
-          icon = '<img src="' + item.def.avatar + '" alt="' + item.def.label + '">';
-        } else {
-          icon = '<div class="wf-pi-icon">' + (item.def.icon || '\u25A0') + '</div>';
-        }
-        html += '<div class="wf-palette-item" draggable="true" data-node-type="' + item.type + '">';
-        html += icon;
-        html += '<span class="wf-pi-name">' + item.def.label + '</span>';
-        html += '</div>';
-      });
-      html += '</div>';
-    });
+    // Input section
+    html += '<div class="wf-palette-section">';
+    html += '<div class="wf-palette-section-title">Input</div>';
+    html += renderPaletteItem('commodity_source');
+    html += renderPaletteItem('question_input');
+    html += '</div>';
+
+    // Analysis Agents section (pipeline order)
+    html += '<div class="wf-palette-section">';
+    html += '<div class="wf-palette-section-title">Analysis Agents</div>';
+    PALETTE_AGENTS.forEach(function (type) { html += renderPaletteItem(type); });
+    html += '</div>';
+
+    // Team Members section (sorted by usefulness)
+    html += '<div class="wf-palette-section">';
+    html += '<div class="wf-palette-section-title">Team Members</div>';
+    PALETTE_TEAM.forEach(function (type) { html += renderPaletteItem(type); });
+    html += '</div>';
+
+    // Output section
+    html += '<div class="wf-palette-section">';
+    html += '<div class="wf-palette-section-title">Output</div>';
+    html += renderPaletteItem('synthesizer');
+    html += renderPaletteItem('report_output');
+    html += '</div>';
 
     palette.innerHTML = html;
 
@@ -547,9 +579,9 @@ var WorkflowManager = (function () {
 
     if (dag.nodes.length === 0) { errors.push('Graph is empty'); return { valid: false, errors: errors }; }
 
-    // Check for at least one input and one agent
+    // Check for at least one input and one agent/member
     var hasInput = dag.nodes.some(function (n) { return n.type === 'commodity_source' || n.type === 'question_input'; });
-    var hasAgent = dag.nodes.some(function (n) { return ANALYSIS_AGENTS.indexOf(n.type) >= 0; });
+    var hasAgent = dag.nodes.some(function (n) { return NODE_DEFS[n.type] && (NODE_DEFS[n.type].category === 'agent' || NODE_DEFS[n.type].category === 'team'); });
     if (!hasInput) errors.push('Missing input node (Commodity or Question)');
     if (!hasAgent) errors.push('Missing at least one agent node');
 
@@ -618,9 +650,10 @@ var WorkflowManager = (function () {
       if (n.type === 'question_input') question = n.question;
     });
 
-    // Set all agent & synth nodes to pending
+    // Set all agent/member/synth nodes to pending
     dag.nodes.forEach(function (n) {
-      if (ANALYSIS_AGENTS.indexOf(n.type) >= 0 || n.type === 'synthesizer') {
+      var def = NODE_DEFS[n.type];
+      if ((def && (def.category === 'agent' || def.category === 'team')) || n.type === 'synthesizer') {
         setNodeState(n.id, 'pending');
       }
     });
