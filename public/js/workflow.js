@@ -6,15 +6,15 @@ var WorkflowManager = (function () {
   var ANALYSIS_AGENTS = ['fx', 'news', 'wasde', 'soft', 'energy', 'cot', 'tech', 'quant'];
   var COMMODITY_LIST = [
     { value: 'corn',      label: 'Corn',      icon: '\uD83C\uDF3D' },
-    { value: 'soybeans',  label: 'Soybeans',  icon: '\uD83E\uDEB4' },
+    { value: 'soybeans',  label: 'Soybeans',  icon: '\uD83C\uDF31' },
     { value: 'wheat',     label: 'Wheat',     icon: '\uD83C\uDF3E' },
     { value: 'coffee',    label: 'Coffee',    icon: '\u2615' },
     { value: 'sugar',     label: 'Sugar',     icon: '\uD83C\uDF6C' },
     { value: 'cotton',    label: 'Cotton',    icon: '\uD83E\uDDF5' },
     { value: 'natgas',    label: 'Nat Gas',   icon: '\uD83D\uDD25' },
     { value: 'wti',       label: 'WTI Crude', icon: '\uD83D\uDEE2\uFE0F' },
-    { value: 'gold',      label: 'Gold',      icon: '\uD83E\uDD47' },
-    { value: 'silver',    label: 'Silver',    icon: '\uD83E\uDD48' },
+    { value: 'gold',      label: 'Gold',      icon: '\uD83E\uDE99' },
+    { value: 'silver',    label: 'Silver',    icon: '\u26AA' },
     { value: 'palladium', label: 'Palladium', icon: '\uD83D\uDCAE' },
     { value: 'usdjpy',    label: 'USD/JPY',   icon: '\uD83D\uDCB1' },
   ];
