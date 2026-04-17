@@ -608,6 +608,21 @@ var BSCalcManager = (function () {
         bePoints.push(bex);
       }
     }
+    // Legend (top-right with background panel) — drawn BEFORE B/E labels so labels render on top
+    ctx.font = '10px Inter, sans-serif';
+    var lx = w - pad.right - 100, ly = pad.top + 4;
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillRect(lx - 4, ly - 2, 104, 32);
+    ctx.strokeStyle = 'rgba(150,150,150,0.2)'; ctx.lineWidth = 1;
+    ctx.strokeRect(lx - 4, ly - 2, 104, 32);
+    ly += 10;
+    ctx.fillStyle = 'rgba(78,205,196,0.9)'; ctx.fillRect(lx, ly - 6, 14, 3);
+    ctx.fillStyle = '#444'; ctx.textAlign = 'left'; ctx.fillText('Theoretical', lx + 18, ly);
+    ly += 14;
+    ctx.fillStyle = 'rgba(255,107,107,0.8)'; ctx.fillRect(lx, ly - 6, 14, 3);
+    ctx.fillStyle = '#444'; ctx.fillText('At Expiry', lx + 18, ly);
+
+    // B/E labels — drawn AFTER legend so they are never obscured
     ctx.save();
     ctx.strokeStyle = 'rgba(255,211,77,0.7)';
     ctx.fillStyle = '#ffd93d';
@@ -628,20 +643,6 @@ var BSCalcManager = (function () {
       ctx.fillText('B/E ' + bex.toFixed(0), bx, labelY);
     });
     ctx.restore();
-
-    // Legend (top-right with background panel)
-    ctx.font = '10px Inter, sans-serif';
-    var lx = w - pad.right - 100, ly = pad.top + 4;
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.fillRect(lx - 4, ly - 2, 104, 32);
-    ctx.strokeStyle = 'rgba(150,150,150,0.2)'; ctx.lineWidth = 1;
-    ctx.strokeRect(lx - 4, ly - 2, 104, 32);
-    ly += 10;
-    ctx.fillStyle = 'rgba(78,205,196,0.9)'; ctx.fillRect(lx, ly - 6, 14, 3);
-    ctx.fillStyle = '#444'; ctx.textAlign = 'left'; ctx.fillText('Theoretical', lx + 18, ly);
-    ly += 14;
-    ctx.fillStyle = 'rgba(255,107,107,0.8)'; ctx.fillRect(lx, ly - 6, 14, 3);
-    ctx.fillStyle = '#444'; ctx.fillText('At Expiry', lx + 18, ly);
 
     ctx.fillStyle = '#555'; ctx.textAlign = 'center';
     ctx.fillText('Underlying Price', pad.left + pw / 2, h - 4);
@@ -808,12 +809,12 @@ var BSCalcManager = (function () {
     // Color bar
     var barX = w - pad.right + 14, barW = 14, barH = ph3;
     for (var i = 0; i < barH; i++) { ctx.fillStyle = heatmapColor(pnlMax - (pnlMax - pnlMin) * i / barH, pnlMin, pnlMax); ctx.fillRect(barX, pad.top + i, barW, 1); }
-    ctx.fillStyle = '#999'; ctx.font = '10px JetBrains Mono, monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#444'; ctx.font = '10px JetBrains Mono, monospace'; ctx.textAlign = 'left';
     ctx.fillText('+' + pnlMax.toFixed(1), barX + barW + 4, pad.top + 10);
     ctx.fillText(pnlMin.toFixed(1), barX + barW + 4, pad.top + barH);
     if (pnlMin < 0 && pnlMax > 0) ctx.fillText('0', barX + barW + 4, pad.top + (1 - (0 - pnlMin) / (pnlMax - pnlMin)) * barH + 4);
 
-    ctx.fillStyle = '#888'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#555'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('Underlying Price', pad.left + pw3 / 2, h - 4);
     ctx.save(); ctx.translate(12, pad.top + ph3 / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('Volatility', 0, 0); ctx.restore();
   }
@@ -856,8 +857,10 @@ var BSCalcManager = (function () {
       netPremium += lp * legs[i].dir * legs[i].qty;
     }
 
-    // Sample payoff at expiry over a very wide range
-    var lo = p.S * 0.01, hi = p.S * 3;
+    // Sample payoff at expiry over a vol-adjusted range (±4σ in log-space covers 99.99%)
+    var sT = p.sigma * Math.sqrt(p.T);
+    var lo = Math.min(p.S * 0.01, p.S * Math.exp(-4 * sT));
+    var hi = Math.max(p.S * 3,    p.S * Math.exp( 4 * sT));
     var steps = 2000, dx = (hi - lo) / steps;
     var maxProfit = -Infinity, maxLoss = Infinity;
     var bePoints = [];
@@ -884,9 +887,11 @@ var BSCalcManager = (function () {
           if (hasUnd) v += sx0 - p.S;
           return v - netPremium;
         })();
-        if ((prev <= 0 && pf >= 0) || (prev >= 0 && pf <= 0)) {
+        if (pf !== prev && ((prev < 0 && pf >= 0) || (prev > 0 && pf <= 0))) {
           var bex = lo + (i - 1) * dx + (-prev / (pf - prev)) * dx;
-          bePoints.push(bex);
+          if (!bePoints.length || Math.abs(bePoints[bePoints.length - 1] - bex) > dx * 0.5) {
+            bePoints.push(bex);
+          }
         }
       }
     }
@@ -904,7 +909,9 @@ var BSCalcManager = (function () {
     var tick = getSymbolTick();
     var dec = tick < 1 ? 2 : 0;
     elMaxP.textContent = profitUnlimited ? 'Unlimited' : maxProfit.toFixed(dec);
-    elMaxL.textContent = lossUnlimited ? 'Unlimited' : maxLoss.toFixed(dec);
+    elMaxL.textContent = lossUnlimited
+      ? 'Unlimited'
+      : (maxLoss >= 0 ? 'None' : maxLoss.toFixed(dec));
 
     // Breakeven
     if (bePoints.length === 0) {
