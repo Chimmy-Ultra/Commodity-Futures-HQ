@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Options 3D Surface — standalone</title>
+<style>
+  /* =========================================================
+     Standalone 3D options pricing surface.
+     Self-contained single file — inline CSS + inline ES module.
+     No relative imports. Works via raw.githack.com or any
+     static host. Drop into claude.ai artifact verbatim.
+     ========================================================= */
+  html, body { margin: 0; height: 100%; background: #050507; }
+  body { overflow: hidden; font-family: 'JetBrains Mono', ui-monospace, monospace; color: #d8e0ec; }
+  #surface { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+  #legend {
+    position: fixed; top: 14px; left: 18px; z-index: 2;
+    font-size: 12px; color: #2dffc8; pointer-events: none;
+    text-shadow: 0 0 8px rgba(45,255,200,.5);
+    letter-spacing: .04em;
+  }
+  #legend small { color: #8892a6; margin-left: 14px; text-shadow: none; }
+  #readout {
+    position: fixed; top: 18px; right: 18px; z-index: 2;
+    background: rgba(8,10,16,.72);
+    border: 1px solid rgba(45,255,200,.25);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px; min-width: 170px;
+    box-shadow: 0 0 24px rgba(45,255,200,.1);
+    backdrop-filter: blur(10px);
+  }
+  #readout .row { display: flex; justify-content: space-between; gap: 18px; padding: 2px 0; }
+  #readout .k { color: #5a6478; }
+  #readout .v { color: #fff; font-weight: 500; }
+  #readout .pnl { margin-top: 6px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,.08); }
+  #readout .pos { color: #2dffc8; text-shadow: 0 0 8px rgba(45,255,200,.5); }
+  #hint {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    z-index: 2; font-size: 11px; color: #5a6478; letter-spacing: .08em;
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+  <canvas id="surface"></canvas>
+
+  <div id="legend">Premium · V <small>x = Price &nbsp;·&nbsp; y = DTE &nbsp;·&nbsp; z = Premium &nbsp;·&nbsp; color = P&amp;L</small></div>
+
+  <div id="readout">
+    <div class="row"><span class="k">Strategy</span><span class="v">Bull Call Spread</span></div>
+    <div class="row"><span class="k">Spot S</span><span class="v" id="r-s">—</span></div>
+    <div class="row"><span class="k">DTE</span><span class="v" id="r-t">—</span></div>
+    <div class="row"><span class="k">Premium V</span><span class="v" id="r-v">—</span></div>
+    <div class="row pnl"><span class="k">P&amp;L</span><span class="v pos" id="r-pnl">—</span></div>
+  </div>
+
+  <div id="hint">drag to orbit · scroll to zoom</div>
+
+<script type="module">
+/* =========================================================
+   1. Black-Scholes math (call, put, strategy)
+   ========================================================= */
+function erf(x) {
+  const a1=.254829592, a2=-.284496736, a3=1.421413741;
+  const a4=-1.453152027, a5=1.061405429, p=.3275911;
+  const s = x < 0 ? -1 : 1;
+  const ax = Math.abs(x);
+  const t = 1 / (1 + p * ax);
+  const y = 1 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t * Math.exp(-ax*ax);
+  return s * y;
+}
+const N = (x) => 0.5 * (1 + erf(x / Math.SQRT2));
+function bsmCall(S, K, T, r, sigma) {
+  if (T <= 1e-9 || sigma <= 1e-9) return Math.max(S - K, 0);
+  const sqrtT = Math.sqrt(T);
+  const d1 = (Math.log(S/K) + (r + 0.5*sigma*sigma)*T) / (sigma*sqrtT);
+  const d2 = d1 - sigma*sqrtT;
+  return S*N(d1) - K*Math.exp(-r*T)*N(d2);
+}
+function strategyValue(legs, S, T, r, sigma) {
+  let v = 0;
+  for (const leg of legs) {
+    const px = leg.type === 'C' ? bsmCall(S, leg.K, T, r, sigma)
+                                : (Math.max(leg.K - S, 0));
+    v += leg.side * leg.qty * px;
+  }
+  return v;
+}
+
+/* =========================================================
+   2. Demo state — Bull Call Spread on TXO around 23,750
+   ========================================================= */
+const SPOT  = 23750;
+const IV    = 0.185;
+const RFR   = 0.015;
+const DTE_H = 5 * 24;   // 5 days to expiry
+const LEGS  = [
+  { type: 'C', side:  1, K: 23700, qty: 1 },
+  { type: 'C', side: -1, K: 23900, qty: 1 },
+];
+const T_NOW = DTE_H / 24 / 365;
+const INITIAL_DEBIT = strategyValue(LEGS, SPOT, T_NOW, RFR, IV);
+
+/* =========================================================
+   3. Three.js scene
+   ========================================================= */
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }     from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass }     from 'three/addons/postprocessing/OutputPass.js';
+
+const canvas = document.getElementById('surface');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
+camera.position.set(8, 6.5, 11);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 6;
+controls.maxDistance = 22;
+controls.target.set(0, 1.5, 0);
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.85, 0.6, 0.05);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+/* color ramp for P&L: magenta → violet → amber → teal */
+function pnlColor(t) {
+  const stops = [
+    [0.0, [1.0, 0.18, 0.54]],
+    [0.4, [0.6, 0.42, 1.0]],
+    [0.7, [1.0, 0.81, 0.30]],
+    [1.0, [0.18, 1.0, 0.78]],
+  ];
+  for (let i = 0; i < stops.length - 1; i++) {
+    const [ta, ca] = stops[i], [tb, cb] = stops[i+1];
+    if (t <= tb) {
+      const u = (t - ta) / (tb - ta);
+      return [ca[0]+(cb[0]-ca[0])*u, ca[1]+(cb[1]-ca[1])*u, ca[2]+(cb[2]-ca[2])*u];
+    }
+  }
+  return stops.at(-1)[1];
+}
+
+/* =========================================================
+   4. Build pricing surface mesh
+   ========================================================= */
+const SURF_X = 60, SURF_Y = 40;
+const surfaceGroup = new THREE.Group();
+scene.add(surfaceGroup);
+
+function buildSurface() {
+  const priceMin = SPOT * 0.95;
+  const priceMax = SPOT * 1.05;
+  const dteMaxH = DTE_H, dteMinH = 0.5;
+
+  const zs = new Float32Array(SURF_X * SURF_Y);
+  const pnls = new Float32Array(SURF_X * SURF_Y);
+  let zMin = Infinity, zMax = -Infinity;
+  let pnlMin = Infinity, pnlMax = -Infinity;
+
+  for (let j = 0; j < SURF_Y; j++) {
+    const dteH = dteMinH + (dteMaxH - dteMinH) * (j / (SURF_Y - 1));
+    const T = dteH / 24 / 365;
+    for (let i = 0; i < SURF_X; i++) {
+      const price = priceMin + (priceMax - priceMin) * (i / (SURF_X - 1));
+      const v = strategyValue(LEGS, price, T, RFR, IV);
+      zs[j*SURF_X + i] = v;
+      const pnl = v - INITIAL_DEBIT;
+      pnls[j*SURF_X + i] = pnl;
+      if (v < zMin) zMin = v; if (v > zMax) zMax = v;
+      if (pnl < pnlMin) pnlMin = pnl; if (pnl > pnlMax) pnlMax = pnl;
+    }
+  }
+  const zScene = (z) => 3 * (z - zMin) / Math.max(zMax - zMin, 1e-6);
+  const xScene = (i) => -3.5 + 7 * (i / (SURF_X - 1));
+  const yScene = (j) => -2.5 + 5 * (j / (SURF_Y - 1));
+
+  const positions = new Float32Array(SURF_X * SURF_Y * 3);
+  const colors    = new Float32Array(SURF_X * SURF_Y * 3);
+  const pnlRange = Math.max(pnlMax - pnlMin, 1e-6);
+  for (let j = 0; j < SURF_Y; j++) {
+    for (let i = 0; i < SURF_X; i++) {
+      const idx = j*SURF_X + i;
+      positions[idx*3+0] = xScene(i);
+      positions[idx*3+1] = zScene(zs[idx]);
+      positions[idx*3+2] = yScene(j);
+      const c = pnlColor((pnls[idx] - pnlMin) / pnlRange);
+      colors[idx*3+0]=c[0]; colors[idx*3+1]=c[1]; colors[idx*3+2]=c[2];
+    }
+  }
+
+  const indices = [];
+  for (let j = 0; j < SURF_Y - 1; j++) {
+    for (let i = 0; i < SURF_X - 1; i++) {
+      const a = j*SURF_X + i, b = a + 1, c = a + SURF_X, d = c + 1;
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
+  geom.setIndex(indices);
+  geom.computeVertexNormals();
+
+  const mat = new THREE.MeshBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.78,
+    side: THREE.DoubleSide, depthWrite: false,
+  });
+  surfaceGroup.add(new THREE.Mesh(geom, mat));
+
+  /* sparse wireframe overlay */
+  const wirePts = [];
+  const step = 3;
+  for (let j = 0; j < SURF_Y; j += step)
+    for (let i = 0; i < SURF_X - 1; i++) {
+      const a = j*SURF_X + i, b = a + 1;
+      wirePts.push(positions[a*3], positions[a*3+1], positions[a*3+2]);
+      wirePts.push(positions[b*3], positions[b*3+1], positions[b*3+2]);
+    }
+  for (let i = 0; i < SURF_X; i += step)
+    for (let j = 0; j < SURF_Y - 1; j++) {
+      const a = j*SURF_X + i, b = a + SURF_X;
+      wirePts.push(positions[a*3], positions[a*3+1], positions[a*3+2]);
+      wirePts.push(positions[b*3], positions[b*3+1], positions[b*3+2]);
+    }
+  const wgeo = new THREE.BufferGeometry();
+  wgeo.setAttribute('position', new THREE.Float32BufferAttribute(wirePts, 3));
+  surfaceGroup.add(new THREE.LineSegments(
+    wgeo,
+    new THREE.LineBasicMaterial({ color: 0x2dffc8, transparent: true, opacity: 0.18 })
+  ));
+
+  /* market price slice */
+  const slicePts = [];
+  const iSpot = Math.round(((SPOT - priceMin) / (priceMax - priceMin)) * (SURF_X - 1));
+  for (let j = 0; j < SURF_Y; j++) {
+    const idx = j*SURF_X + iSpot;
+    slicePts.push(positions[idx*3], positions[idx*3+1], positions[idx*3+2]);
+  }
+  const sgeo = new THREE.BufferGeometry();
+  sgeo.setAttribute('position', new THREE.Float32BufferAttribute(slicePts, 3));
+  surfaceGroup.add(new THREE.Line(sgeo, new THREE.LineBasicMaterial({ color: 0xff2d8a })));
+
+  /* readout for current spot @ mid DTE */
+  const midJ = Math.floor(SURF_Y * 0.5);
+  document.getElementById('r-s').textContent = SPOT.toLocaleString();
+  document.getElementById('r-t').textContent = (DTE_H/24).toFixed(0) + ' days';
+  document.getElementById('r-v').textContent = zs[midJ*SURF_X + iSpot].toFixed(2);
+  const pnlNow = pnls[midJ*SURF_X + iSpot];
+  document.getElementById('r-pnl').textContent = (pnlNow >= 0 ? '+' : '') + '$' + pnlNow.toFixed(0);
+}
+buildSurface();
+
+/* axes + grid floor */
+const ax = new THREE.Group();
+const axLine = (a, b, color) => {
+  const g = new THREE.BufferGeometry().setFromPoints([a, b]);
+  return new THREE.Line(g, new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.55 }));
+};
+ax.add(axLine(new THREE.Vector3(-3.5, 0, -2.5), new THREE.Vector3( 3.5, 0, -2.5), 0x2dffc8));
+ax.add(axLine(new THREE.Vector3(-3.5, 0, -2.5), new THREE.Vector3(-3.5, 3.5, -2.5), 0x6dffb6));
+ax.add(axLine(new THREE.Vector3(-3.5, 0, -2.5), new THREE.Vector3(-3.5, 0,  2.5), 0x9a6bff));
+scene.add(ax);
+const grid = new THREE.GridHelper(8, 16, 0x1a1f2c, 0x12141c);
+grid.position.y = -0.001;
+scene.add(grid);
+
+/* =========================================================
+   5. Animate + resize
+   ========================================================= */
+function resize() {
+  const r = canvas.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  composer.setSize(r.width, r.height);
+  bloom.setSize(r.width, r.height);
+  camera.aspect = r.width / r.height;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(canvas);
+resize();
+
+let t = 0, dragging = false;
+controls.addEventListener('start', () => dragging = true);
+controls.addEventListener('end',   () => dragging = false);
+function tick() {
+  controls.update();
+  if (!dragging) {
+    t += 0.0008;
+    surfaceGroup.rotation.y = Math.sin(t) * 0.18;
+  }
+  composer.render();
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>

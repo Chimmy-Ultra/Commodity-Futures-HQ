@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TXO Options Surface · demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button class="iconbtn" aria-label="back">‹</button>
+      <div class="strategy">
+        <span class="badge-tri" aria-hidden="true">▲</span>
+        <select id="strategy">
+          <option value="bull-call">Bull Call Spread</option>
+          <option value="bear-put">Bear Put Spread</option>
+          <option value="long-call">Long Call</option>
+          <option value="long-put">Long Put</option>
+          <option value="straddle">Long Straddle</option>
+          <option value="iron-condor">Iron Condor</option>
+        </select>
+      </div>
+      <div class="topbar-right">
+        <button class="iconbtn" aria-label="settings">⌥</button>
+        <button class="iconbtn" aria-label="text-mode">文</button>
+      </div>
+    </header>
+
+    <section class="ticker">
+      <span class="sym">TXO</span>
+      <span class="px" id="px-display">23,750.00</span>
+      <span class="chg neg" id="chg-display">-0.45%</span>
+      <span class="iv-tag">IV <span id="iv-display">18.5%</span></span>
+    </section>
+
+    <main class="stage">
+      <canvas id="surface"></canvas>
+
+      <div class="legend">
+        <span class="legend-z">Premium <span class="dash">—</span> V</span>
+        <span class="legend-mkt"><span class="dot mkt"></span>Market price</span>
+      </div>
+
+      <div class="readout" id="readout">
+        <div class="row"><span class="k">S</span><span class="v" id="r-s">23,750.00</span></div>
+        <div class="row"><span class="k">T</span><span class="v" id="r-t">0.005479</span></div>
+        <div class="row"><span class="k">V</span><span class="v" id="r-v">68.42</span></div>
+        <div class="row pnl"><span class="k">P&amp;L</span><span class="v pos" id="r-pnl">+$28</span></div>
+      </div>
+    </main>
+
+    <aside class="panel axes">
+      <button class="axis x active" data-axis="x">
+        <span class="ax-label">x</span>
+        <span class="ax-value">Price (eval)</span>
+      </button>
+      <button class="axis y active" data-axis="y">
+        <span class="ax-label">y</span>
+        <span class="ax-value">Maturity (DTE)</span>
+      </button>
+      <button class="axis z active" data-axis="z">
+        <span class="ax-label">z</span>
+        <span class="ax-value">Premium</span>
+      </button>
+      <button class="axis lambda active" data-axis="lambda">
+        <span class="ax-label">λ</span>
+        <span class="ax-value">P&amp;L</span>
+      </button>
+    </aside>
+
+    <section class="dates" id="dates"></section>
+
+    <section class="meta-row">
+      <span id="exp-text">Fri, May 8 at 1:30 PM (2DTE)</span>
+      <button class="exp-btn">Exp ›</button>
+    </section>
+
+    <section class="scrubber-block">
+      <div class="scrubber" id="price-scrubber">
+        <div class="track"></div>
+        <div class="ticks" id="price-ticks"></div>
+        <div class="cursor"><span class="diamond"></span></div>
+        <div class="label">PRICE <span class="val" id="price-val">$23,750.50</span></div>
+      </div>
+
+      <div class="scrubber" id="iv-scrubber">
+        <div class="track iv-track"></div>
+        <div class="ticks" id="iv-ticks"></div>
+        <div class="cursor"><span class="diamond"></span></div>
+        <div class="label">IV <span class="val" id="iv-val">18.5%</span></div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
